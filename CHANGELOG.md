@@ -1,3 +1,58 @@
+## 0.34.0 / 2019-10-31
+
+<!-- Unclassified pull requests:
+* [] Cut the 0.33.0 version release. #2758
+* [] Fix a typo. #2760
+* [] Added bwplotka to owner files. #2767
+* [] Cleaned up travis yaml. #2765
+* [] prometheus-config-reloader: Remove unneeded Ownership change. #2761
+* [] Add exec probes with wget localhost:9090 to Prometheus if listenLocal. #2763
+* [] update k8s client to 1.16. #2778
+* [] scripts/jsonnet: Bump jsonnet and golangci-lint versions. #2784
+* [] cmd/operator: add [prometheus,alertmanager]-instance-namespaces cmdline parameter. #2783
+* [] Add ListenLocal option for Thanos spec to listen on local loopback. #2728
+* [] Reference secrets instead of local files (cont. #2524). #2716
+* [] OWNERS: remove mxinden. #2793
+* [] jsonnet/prometheus-operator: add local configuration options. #2794
+* [] make arbitraryFSAccessThroughSMs optional. #2797
+* [] *: reference current directory by make built-in. #2805
+* [] allow running only part of e2e tests and use it in CI. #2804
+* [] Add OverrideHonorLabels to Prometheus CR. #2806
+* [] Improve detection of StatefulSet changes. #2801
+* [] pkg,Documentation: Add missing json struct tag. #2808
+* [] pkg/prometheus: add testing global settings. #2811
+* [] *: Ensure containers have "FallbackToLogsOnError" termination policy. #2819
+* [] add field ignoreNamespaceSelectors to Prometheus CRD. #2816
+* [] pkg/prometheus/promcfg.go: minor simplifications. #2817
+* [] Add option to honor_timestamps. #2800
+* [] basic podmonitor docs. #2807
+* [] Add EnforcedNamespaceLabel to Prometheus CR. #2820
+* [] pkg/prometheus/promcfg.go: Only append relabelings if EnforcedNamespaceLabel value is set. #2830
+* [] docs: Update URL references to api-conventions.md. #2826
+* [] Add ConfigSecret element to the AlertmanagerSpec. #2827
+* [] Update prometheus dependency to v2.12.0 to fix validation failure for…. #2779
+* [] Remove dead custom API group code. #2835
+* [] Removed broken link. #2831 -->
+
+Contributors:
+
+* @AngusDavis
+* @EJKinger
+* @LiliC
+* @allen13
+* @anandsinghkunwar
+* @auhlig
+* @brancz
+* @bwplotka
+* @gjtempleton
+* @kinarashah
+* @metalmatze
+* @mrueg
+* @mrunge
+* @paulfantom
+* @pgier
+* @s-urbaniak
+
 ## Next release
 
 * [BUGFIX] Update prometheus dependency to v2.12.0 to fix validation failure for .externalLabels admission webhook (#2774)
