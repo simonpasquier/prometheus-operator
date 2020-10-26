@@ -447,61 +447,98 @@ func TestAdditionalSecretsMounted(t *testing.T) {
 	}
 }
 
-func TestSHAAndTagAndVersion(t *testing.T) {
-	{
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
-			Spec: monitoringv1.AlertmanagerSpec{
+func TestStatefulSetImageName(t *testing.T) {
+	config := Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "0m",
+			Memory: "0Mi",
+			Image:  "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		AlertmanagerDefaultBaseImage: "quay.io/fromconfig/alertmanager",
+	}
+
+	for _, tc := range []struct {
+		spec   monitoringv1.AlertmanagerSpec
+		config Config
+
+		expectedAlertmanager string
+		expectedReloader     string
+	}{
+		{
+			spec: monitoringv1.AlertmanagerSpec{
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, nil, defaultTestConfig)
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		image := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "quay.io/prometheus/alertmanager:my-unrelated-tag"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
-	}
-	{
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
-			Spec: monitoringv1.AlertmanagerSpec{
+			config:               config,
+			expectedAlertmanager: "quay.io/fromconfig/alertmanager:my-unrelated-tag",
+			expectedReloader:     "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
 			},
-		}, nil, defaultTestConfig)
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		image := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "quay.io/prometheus/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
-	}
-	{
-		image := "my-registry/alertmanager:latest"
-		sset, err := makeStatefulSet(&monitoringv1.Alertmanager{
-			Spec: monitoringv1.AlertmanagerSpec{
+			config:               config,
+			expectedAlertmanager: "quay.io/fromconfig/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader:     "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.AlertmanagerSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
 				Version: "v0.15.3",
-				Image:   &image,
+				Image:   func(s string) *string { return &s }("my-reg/alertmanager:latest"),
 			},
-		}, nil, defaultTestConfig)
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
+			config:               config,
+			expectedAlertmanager: "my-reg/alertmanager:latest",
+			expectedReloader:     "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.AlertmanagerSpec{
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.3",
+				Image:   func(s string) *string { return &s }("my-reg/alertmanager"),
+			},
+			config:               config,
+			expectedAlertmanager: "docker.io/my-reg/alertmanager:my-unrelated-tag",
+			expectedReloader:     "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.AlertmanagerSpec{
+				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+				Tag:     "my-unrelated-tag",
+				Version: "v0.15.3",
+				Image:   func(s string) *string { return &s }("my-reg/alertmanager"),
+			},
+			config:               config,
+			expectedAlertmanager: "my-reg/alertmanager@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader:     "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+	} {
+		t.Run(tc.expectedAlertmanager, func(t *testing.T) {
+			sset, err := makeStatefulSet(&monitoringv1.Alertmanager{Spec: tc.spec}, nil, tc.config)
+			if err != nil {
+				t.Fatalf("unexpected error while making StatefulSet: %v", err)
+			}
 
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-registry/alertmanager:latest"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
+			for _, container := range sset.Spec.Template.Spec.Containers {
+				switch container.Name {
+				case "alertmanager":
+					image := container.Image
+					if image != tc.expectedAlertmanager {
+						t.Fatalf("expected Alertmanager image to be %q, got: %q", tc.expectedAlertmanager, image)
+					}
+				case "config-reloader":
+					image := container.Image
+					if image != tc.expectedReloader {
+						t.Fatalf("expected reloader image to be %q, got: %q", tc.expectedReloader, image)
+					}
+				default:
+					t.Fatalf("got unexpectd container %s", container.Name)
+				}
+			}
+		})
 	}
 }
 

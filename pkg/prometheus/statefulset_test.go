@@ -445,190 +445,210 @@ func TestListenLocal(t *testing.T) {
 	}
 }
 
-func TestTagAndShaAndVersion(t *testing.T) {
-	{
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+func TestStatefulSetImageName(t *testing.T) {
+	config := &operator.Config{
+		ReloaderConfig: operator.ReloaderConfig{
+			CPU:    "0m",
+			Memory: "0Mi",
+			Image:  "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		PrometheusDefaultBaseImage: "quay.io/fromconfig/prometheus",
+		ThanosDefaultBaseImage:     "quay.io/fromconfig/thanos",
+	}
+
+	for _, tc := range []struct {
+		spec   monitoringv1.PrometheusSpec
+		config *operator.Config
+
+		expectedProm     string
+		expectedReloader string
+		expectedThanos   string
+	}{
+		{
+			spec: monitoringv1.PrometheusSpec{
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		image := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "quay.io/prometheus/prometheus:my-unrelated-tag"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
-	}
-	{
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "quay.io/fromconfig/prometheus:my-unrelated-tag",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		image := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "quay.io/prometheus/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if image != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, image)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "quay.io/fromconfig/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
-				Image:   &image,
+				Image:   func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus:latest"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
-				Image:   &image,
+				Image:   func(s string) *string { return &s }("my-reg/prometheus:latest"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:latest"
-		if resultImage != expected {
-			t.Fatalf("Explicit image should have precedence. Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "my-reg/prometheus:latest",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Tag:     "my-unrelated-tag",
 				Version: "v2.3.2",
-				Image:   &image,
+				Image:   func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus:v2.3.2"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "docker.io/my-reg/prometheus:my-unrelated-tag",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Version: "v2.3.2",
+				Image:   func(s string) *string { return &s }("my-reg/prometheus"),
+			},
+			config:           config,
+			expectedProm:     "my-reg/prometheus:v2.3.2",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:     "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
 				Version: "v2.3.2",
-				Image:   &image,
+				Image:   func(s string) *string { return &s }("my-reg/prometheus:latest"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
-				Image: &image,
+			config:           config,
+			expectedProm:     "my-reg/prometheus:latest",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Image: func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "my-reg/prometheus",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-				Image: &image,
+				Image: func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				Tag:   "my-unrelated-tag",
-				Image: &image,
+				Image: func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
-
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "docker.io/my-reg/prometheus:my-unrelated-tag"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
-	}
-	{
-		image := "my-reg/prometheus"
-		sset, err := makeStatefulSet(monitoringv1.Prometheus{
-			Spec: monitoringv1.PrometheusSpec{
+			config:           config,
+			expectedProm:     "docker.io/my-reg/prometheus:my-unrelated-tag",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
 				SHA:   "7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
-				Tag:   "my-unrealted-tag",
-				Image: &image,
+				Tag:   "my-unrelated-tag",
+				Image: func(s string) *string { return &s }("my-reg/prometheus"),
 			},
-		}, defaultTestConfig, nil, "")
-		if err != nil {
-			t.Fatalf("Unexpected error while making StatefulSet: %v", err)
-		}
+			config:           config,
+			expectedProm:     "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Image:  func(s string) *string { return &s }("my-reg/prometheus:latest"),
+				Thanos: &monitoringv1.ThanosSpec{},
+			},
+			config:           config,
+			expectedProm:     "my-reg/prometheus:latest",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+			expectedThanos:   "quay.io/fromconfig/thanos:v0.15.0",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Image: func(s string) *string { return &s }("my-reg/prometheus:latest"),
+				Thanos: &monitoringv1.ThanosSpec{
+					Image: func(s string) *string { return &s }("my-reg/thanos:latest"),
+				},
+			},
+			config:           config,
+			expectedProm:     "my-reg/prometheus:latest",
+			expectedReloader: "quay.io/fromconfig/prometheus-config-reloader:latest",
+			expectedThanos:   "my-reg/thanos:latest",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{
+				Image: func(s string) *string { return &s }("my-reg/prometheus:latest"),
+			},
+			config: &operator.Config{
+				PrometheusDefaultBaseImage: "my-reg/prometheus:v2.13.2",
+				ReloaderConfig: operator.ReloaderConfig{
+					CPU:    "0m",
+					Memory: "0Mi",
+					Image:  "my-reg/prometheus-config-reloader:v0.43.0",
+				},
+			},
+			expectedProm:     "my-reg/prometheus:latest",
+			expectedReloader: "my-reg/prometheus-config-reloader:v0.43.0",
+		},
+		{
+			spec: monitoringv1.PrometheusSpec{},
+			config: &operator.Config{
+				PrometheusDefaultBaseImage: "my-reg/prometheus:v2.13.2",
+				ReloaderConfig: operator.ReloaderConfig{
+					CPU:    "0m",
+					Memory: "0Mi",
+					Image:  "my-reg/prometheus-config-reloader:v0.43.0",
+				},
+			},
+			expectedProm:     "my-reg/prometheus:v2.13.2",
+			expectedReloader: "my-reg/prometheus-config-reloader:v0.43.0",
+		},
+	} {
+		t.Run(tc.expectedProm, func(t *testing.T) {
+			sset, err := makeStatefulSet(monitoringv1.Prometheus{Spec: tc.spec}, tc.config, nil, "")
+			if err != nil {
+				t.Fatalf("unexpected error while making StatefulSet: %v", err)
+			}
 
-		resultImage := sset.Spec.Template.Spec.Containers[0].Image
-		expected := "my-reg/prometheus@sha256:7384a79f4b4991bf8269e7452390249b7c70bcdd10509c8c1c6c6e30e32fb324"
-		if resultImage != expected {
-			t.Fatalf("Unexpected container image.\n\nExpected: %s\n\nGot: %s", expected, resultImage)
-		}
+			for _, container := range sset.Spec.Template.Spec.Containers {
+				switch container.Name {
+				case "prometheus":
+					image := container.Image
+					if image != tc.expectedProm {
+						t.Fatalf("expected Prometheus image to be %q, got: %q", tc.expectedProm, image)
+					}
+				case "config-reloader":
+					image := container.Image
+					if image != tc.expectedReloader {
+						t.Fatalf("expected reloader image to be %q, got: %q", tc.expectedReloader, image)
+					}
+				case "thanos-sidecar":
+					image := container.Image
+					if image != tc.expectedThanos {
+						t.Fatalf("expected Thanos image to be %q, got: %q", tc.expectedThanos, image)
+					}
+				default:
+					t.Fatalf("got unexpectd container %s", container.Name)
+				}
+			}
+		})
 	}
 }
 

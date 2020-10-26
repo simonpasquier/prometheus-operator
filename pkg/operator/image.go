@@ -21,9 +21,14 @@ import (
 	dockerref "github.com/docker/distribution/reference"
 )
 
-// BuildImagePath builds a container image path based on
-// the given parameters.
+// BuildImagePath builds a container image path based on the given parameters.
+//
 // If the image contains tag or digest then image will be returned.
+// Otherwise if the sha parameter isn't empty, it is appended as
+// "@sha256:<sha>" to the image parameter.
+// Otherwise if the tag parameter isn't empty, it is appended to the image parameter.
+// Otherwise if the version parameter isn't empty, it is appended to the image parameter.
+//
 // Inspired by kubernetes code handling of image building.
 func BuildImagePath(image, version, tag, sha string) (string, error) {
 	named, err := dockerref.ParseNormalizedNamed(image)
@@ -51,9 +56,8 @@ func BuildImagePath(image, version, tag, sha string) (string, error) {
 	return image, nil
 }
 
-// StringValOrDefault returns the default val if the
-// given string is empty/whitespace.
-// Otherwise returns the value of the string..
+// StringValOrDefault returns the default val if the given string is
+// empty/whitespace. Otherwise it returns the value of the string.
 func StringValOrDefault(val, defaultVal string) string {
 	if strings.TrimSpace(val) == "" {
 		return defaultVal
@@ -61,9 +65,9 @@ func StringValOrDefault(val, defaultVal string) string {
 	return val
 }
 
-// StringPtrValOrDefault returns the default val if the
-// given string pointer is nil points to an empty/whitespace string.
-// Otherwise returns the value of the string.
+// StringPtrValOrDefault returns the defaultVal parameter if the given string
+// pointer is nil or the pointed value is an empty/whitespace string.
+// Otherwise it returns the value of the string.
 func StringPtrValOrDefault(val *string, defaultVal string) string {
 	if val == nil {
 		return defaultVal
