@@ -156,6 +156,7 @@ image: .hack-operator-image .hack-prometheus-config-reloader-image
 tidy:
 	go mod tidy -v
 	cd scripts && go mod tidy -v -modfile=go.mod
+	cd pkg/apis/monitoring && go mod tidy -v -modfile=go.mod
 
 .PHONY: generate
 generate: $(DEEPCOPY_TARGETS) generate-crds bundle.yaml example/mixin/alerts.yaml $(shell find Documentation -type f)
