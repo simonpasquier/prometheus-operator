@@ -30,13 +30,13 @@ require (
 	golang.org/x/sync v0.0.0-20201008141435-b3e1573b7520
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v2 v2.3.0
-	k8s.io/api v0.19.2
-	k8s.io/apiextensions-apiserver v0.19.2
-	k8s.io/apimachinery v0.19.2
+	k8s.io/api v0.20.0
+	k8s.io/apiextensions-apiserver v0.20.0
+	k8s.io/apimachinery v0.20.0
 	k8s.io/client-go v12.0.0+incompatible
-	k8s.io/component-base v0.19.2
+	k8s.io/component-base v0.20.0
 	k8s.io/klog v1.0.0
-	k8s.io/klog/v2 v2.3.0
+	k8s.io/klog/v2 v2.4.0
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 )
 
@@ -45,7 +45,7 @@ replace (
 	github.com/prometheus-operator/prometheus-operator/pkg/client => ./pkg/client
 	// A replace directive is needed for k8s.io/client-go because Cortex (which
 	// is an indirect dependency through Thanos) has a requirement on v12.0.0.
-	k8s.io/client-go => k8s.io/client-go v0.19.2
+	k8s.io/client-go => k8s.io/client-go v0.20.0
 	k8s.io/klog => github.com/simonpasquier/klog-gokit v0.3.0
 	k8s.io/klog/v2 => github.com/simonpasquier/klog-gokit/v2 v2.0.1
 )

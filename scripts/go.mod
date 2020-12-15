@@ -11,6 +11,6 @@ require (
 	github.com/jsonnet-bundler/jsonnet-bundler v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/yeya24/promlinter v0.0.0-20201120174540-eec9e2ee3b40
-	k8s.io/code-generator v0.18.2
+	k8s.io/code-generator v0.20.0
 	sigs.k8s.io/controller-tools v0.4.1
 )
