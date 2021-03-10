@@ -684,7 +684,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 	var additionalContainers []v1.Container
 
-	disableCompaction := p.Spec.DisableCompaction
+	//disableCompaction := p.Spec.DisableCompaction
 	if p.Spec.Thanos != nil {
 		thanosImage, err := operator.BuildImagePath(
 			operator.StringPtrValOrDefault(p.Spec.Thanos.Image, ""),
@@ -773,7 +773,7 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 
 			// NOTE(bwplotka): As described in https://thanos.io/components/sidecar.md/ we have to turn off compaction of Prometheus
 			// to avoid races during upload, if the uploads are configured.
-			disableCompaction = true
+			//disableCompaction = true
 		}
 
 		if p.Spec.Thanos.TracingConfig != nil || len(p.Spec.Thanos.TracingConfigFile) > 0 {
@@ -806,10 +806,10 @@ func makeStatefulSetSpec(p monitoringv1.Prometheus, c *operator.Config, shard in
 		}
 		additionalContainers = append(additionalContainers, container)
 	}
-	if disableCompaction {
-		promArgs = append(promArgs, "--storage.tsdb.max-block-duration=2h")
-		promArgs = append(promArgs, "--storage.tsdb.min-block-duration=2h")
-	}
+	//if disableCompaction {
+	promArgs = append(promArgs, "--storage.tsdb.max-block-duration=30m")
+	promArgs = append(promArgs, "--storage.tsdb.min-block-duration=30m")
+	//}
 
 	configReloaderArgs := []string{
 		fmt.Sprintf("--config-file=%s", path.Join(confDir, configFilename)),
