@@ -91,8 +91,8 @@ func NewClusterConfig(host string, tlsInsecure bool, tlsConfig *rest.TLSClientCo
 		}
 	}
 
-	cfg.QPS = 100
-	cfg.Burst = 100
+	cfg.QPS = 25
+	cfg.Burst = 50
 
 	return cfg, nil
 }
