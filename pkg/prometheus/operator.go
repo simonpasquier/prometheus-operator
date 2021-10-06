@@ -1549,9 +1549,9 @@ func (c *Operator) createOrUpdateConfigurationSecret(ctx context.Context, p *mon
 	}
 
 	for i, remote := range p.Spec.RemoteWrite {
-		if err := validateRemoteWriteSpec(remote); err != nil {
-			return errors.Wrapf(err, "remote write %d", i)
-		}
+		//if err := validateRemoteWriteSpec(remote); err != nil {
+		//return errors.Wrapf(err, "remote write %d", i)
+		//}
 		key := fmt.Sprintf("remoteWrite/%d", i)
 		if err := store.AddBasicAuth(ctx, p.GetNamespace(), remote.BasicAuth, key); err != nil {
 			return errors.Wrapf(err, "remote write %d", i)
