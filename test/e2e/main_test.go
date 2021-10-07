@@ -111,7 +111,31 @@ func TestAllNS(t *testing.T) {
 	// all tests finished. Wrapping it in testAllNSPrometheus and testAllNSAlertmanager
 	// fixes this.
 	t.Run("x", testAllNSAlertmanager)
-	t.Run("y", testAllNSPrometheus)
+	if !t.Run("y", testAllNSPrometheus) {
+		opts := metav1.ListOptions{LabelSelector: fields.SelectorFromSet(fields.Set(map[string]string{
+			"app.kubernetes.io/name": "prometheus-operator",
+		})).String()}
+
+		pods, err := framework.KubeClient.CoreV1().Pods(ns).List(context.Background(), opts)
+		if err != nil {
+			t.Logf("failed to get prometheus-operator pod: %v", err)
+			return
+		}
+		if expected := 1; len(pods.Items) != expected {
+			t.Logf("expected %v Prometheus Operator pods, but got %v", expected, len(pods.Items))
+			return
+		}
+
+		t.Logf("%s/%s pod status: %#v", ns, pods.Items[0].Name, pods.Items[0].Status)
+
+		logs, err := framework.GetLogs(context.Background(), ns, pods.Items[0].Name, "prometheus-operator")
+		if err != nil {
+			t.Logf("failed to get prometheus-operator logs: %v", err)
+			return
+		}
+		t.Logf("Logs from %s/%s", ns, pods.Items[0].Name)
+		t.Log(logs)
+	}
 	t.Run("z", testAllNSThanosRuler)
 
 	// Check if Prometheus Operator ever restarted.
@@ -171,43 +195,43 @@ func testAllNSAlertmanager(t *testing.T) {
 func testAllNSPrometheus(t *testing.T) {
 	skipPrometheusTests(t)
 	testFuncs := map[string]func(t *testing.T){
-		"PromRemoteWriteWithTLS":                 testPromRemoteWriteWithTLS,
-		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,
-		"PromScaleUpDownCluster":                 testPromScaleUpDownCluster,
-		"PromNoServiceMonitorSelector":           testPromNoServiceMonitorSelector,
-		"PromVersionMigration":                   testPromVersionMigration,
-		"PromResourceUpdate":                     testPromResourceUpdate,
-		"PromStorageLabelsAnnotations":           testPromStorageLabelsAnnotations,
-		"PromStorageUpdate":                      testPromStorageUpdate,
-		"PromReloadConfig":                       testPromReloadConfig,
-		"PromAdditionalScrapeConfig":             testPromAdditionalScrapeConfig,
-		"PromAdditionalAlertManagerConfig":       testPromAdditionalAlertManagerConfig,
-		"PromReloadRules":                        testPromReloadRules,
-		"PromMultiplePrometheusRulesSameNS":      testPromMultiplePrometheusRulesSameNS,
-		"PromMultiplePrometheusRulesDifferentNS": testPromMultiplePrometheusRulesDifferentNS,
-		"PromRulesExceedingConfigMapLimit":       testPromRulesExceedingConfigMapLimit,
-		"PromRulesMustBeAnnotated":               testPromRulesMustBeAnnotated,
-		"PromtestInvalidRulesAreRejected":        testInvalidRulesAreRejected,
-		"PromOnlyUpdatedOnRelevantChanges":       testPromOnlyUpdatedOnRelevantChanges,
-		"PromWhenDeleteCRDCleanUpViaOwnerRef":    testPromWhenDeleteCRDCleanUpViaOwnerRef,
-		"PromDiscovery":                          testPromDiscovery,
-		"ShardingProvisioning":                   testShardingProvisioning,
-		"Resharding":                             testResharding,
-		"PromAlertmanagerDiscovery":              testPromAlertmanagerDiscovery,
-		"PromExposingWithKubernetesAPI":          testPromExposingWithKubernetesAPI,
-		"PromDiscoverTargetPort":                 testPromDiscoverTargetPort,
-		"PromOpMatchPromAndServMonInDiffNSs":     testPromOpMatchPromAndServMonInDiffNSs,
-		"PromGetAuthSecret":                      testPromGetAuthSecret,
-		"PromArbitraryFSAcc":                     testPromArbitraryFSAcc,
-		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
-		"Thanos":                                 testThanos,
-		"PromStaticProbe":                        testPromStaticProbe,
-		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
-		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
-		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
-		"PromWebTLS":                             testPromWebTLS,
-		"PromMinReadySeconds":                    testPromMinReadySeconds,
-		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
+		"PromRemoteWriteWithTLS": testPromRemoteWriteWithTLS,
+		//		"PromCreateDeleteCluster":                testPromCreateDeleteCluster,
+		//		"PromScaleUpDownCluster":                 testPromScaleUpDownCluster,
+		//		"PromNoServiceMonitorSelector":           testPromNoServiceMonitorSelector,
+		//		"PromVersionMigration":                   testPromVersionMigration,
+		//		"PromResourceUpdate":                     testPromResourceUpdate,
+		//		"PromStorageLabelsAnnotations":           testPromStorageLabelsAnnotations,
+		//		"PromStorageUpdate":                      testPromStorageUpdate,
+		//		"PromReloadConfig":                       testPromReloadConfig,
+		//		"PromAdditionalScrapeConfig":             testPromAdditionalScrapeConfig,
+		//		"PromAdditionalAlertManagerConfig":       testPromAdditionalAlertManagerConfig,
+		//		"PromReloadRules":                        testPromReloadRules,
+		//		"PromMultiplePrometheusRulesSameNS":      testPromMultiplePrometheusRulesSameNS,
+		//		"PromMultiplePrometheusRulesDifferentNS": testPromMultiplePrometheusRulesDifferentNS,
+		//		"PromRulesExceedingConfigMapLimit":       testPromRulesExceedingConfigMapLimit,
+		//		"PromRulesMustBeAnnotated":               testPromRulesMustBeAnnotated,
+		//		"PromtestInvalidRulesAreRejected":        testInvalidRulesAreRejected,
+		//		"PromOnlyUpdatedOnRelevantChanges":       testPromOnlyUpdatedOnRelevantChanges,
+		//		"PromWhenDeleteCRDCleanUpViaOwnerRef":    testPromWhenDeleteCRDCleanUpViaOwnerRef,
+		//		"PromDiscovery":                          testPromDiscovery,
+		//		"ShardingProvisioning":                   testShardingProvisioning,
+		//		"Resharding":                             testResharding,
+		//		"PromAlertmanagerDiscovery":              testPromAlertmanagerDiscovery,
+		//		"PromExposingWithKubernetesAPI":          testPromExposingWithKubernetesAPI,
+		//		"PromDiscoverTargetPort":                 testPromDiscoverTargetPort,
+		//		"PromOpMatchPromAndServMonInDiffNSs":     testPromOpMatchPromAndServMonInDiffNSs,
+		//		"PromGetAuthSecret":                      testPromGetAuthSecret,
+		//		"PromArbitraryFSAcc":                     testPromArbitraryFSAcc,
+		//		"PromTLSConfigViaSecret":                 testPromTLSConfigViaSecret,
+		//		"Thanos":                                 testThanos,
+		//		"PromStaticProbe":                        testPromStaticProbe,
+		//		"PromSecurePodMonitor":                   testPromSecurePodMonitor,
+		//		"PromSharedResourcesReconciliation":      testPromSharedResourcesReconciliation,
+		//		"PromPreserveUserAddedMetadata":          testPromPreserveUserAddedMetadata,
+		//		"PromWebTLS":                             testPromWebTLS,
+		//		"PromMinReadySeconds":                    testPromMinReadySeconds,
+		//		"PromEnforcedNamespaceLabel":             testPromEnforcedNamespaceLabel,
 	}
 
 	for name, f := range testFuncs {

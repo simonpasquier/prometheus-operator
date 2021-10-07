@@ -293,12 +293,12 @@ func createK8sAppMonitoring(
 	url := "https://" + svcIP + ":" + fmt.Sprint(svcTLSPort)
 	framework.AddRemoteWriteWithTLSToPrometheus(prometheusCRD, url, prwtc)
 	if _, err := framework.CreatePrometheusAndWaitUntilReady(context.Background(), ns, prometheusCRD); err != nil {
-		return nil, err
+		return prometheusCRD, err
 	}
 
 	promSVC := framework.MakePrometheusService(prometheusCRD.Name, name, v1.ServiceTypeClusterIP)
 	if _, err := framework.CreateServiceAndWaitUntilReady(context.Background(), ns, promSVC); err != nil {
-		return nil, err
+		return prometheusCRD, err
 	}
 
 	return prometheusCRD, nil
@@ -736,6 +736,7 @@ func testPromRemoteWriteWithTLS(t *testing.T) {
 			// Setup monitoring.
 			prometheusCRD, err := createK8sAppMonitoring(name, ns, test, svcIP, svcTLSPort)
 			if err != nil {
+				framework.PrintPrometheusLogs(context.Background(), t, prometheusCRD)
 				t.Fatal(err)
 			}
 
