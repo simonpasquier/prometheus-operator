@@ -1,4 +1,3 @@
-main
 ---
 title: "Operator CLI Flags"
 description: "Lists of possible arguments passed to operator executable."
