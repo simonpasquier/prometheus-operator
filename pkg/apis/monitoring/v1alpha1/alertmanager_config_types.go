@@ -40,7 +40,7 @@ const (
 // across multiple namespaces configuring one Alertmanager cluster.
 // +genclient
 // +k8s:openapi-gen=true
-// +kubebuilder:resource:categories="prometheus-operator"
+// +kubebuilder:resource:categories="prometheus-operator",shortName="amcfg"
 type AlertmanagerConfig struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -484,6 +484,12 @@ type OpsGenieConfig struct {
 	// HTTP client configuration.
 	// +optional
 	HTTPConfig *HTTPConfig `json:"httpConfig,omitempty"`
+	// Optional field that can be used to specify which domain alert is related to.
+	// +optional
+	Entity string `json:"entity,omitempty"`
+	// Comma separated list of actions that will be available for the alert.
+	// +optional
+	Actions string `json:"actions,omitempty"`
 }
 
 // Validate ensures OpsGenieConfig is valid
