@@ -4479,18 +4479,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           authSecret:
                             description: The secret's key that contains the CRAM-MD5
@@ -4501,18 +4499,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           authUsername:
                             description: The username to use for authentication.
@@ -4711,18 +4707,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           apiURL:
                             description: The URL to send OpsGenie API requests to.
@@ -4845,19 +4839,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -5268,19 +5259,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -5556,18 +5544,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           sendResolved:
                             description: Whether or not to notify about resolved alerts.
@@ -5583,18 +5569,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           severity:
                             description: Severity of the incident.
@@ -5713,19 +5697,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -5987,18 +5968,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           url:
                             description: A supplementary URL shown alongside the message.
@@ -6016,18 +5995,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                         type: object
                       type: array
@@ -6093,18 +6070,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           callbackId:
                             type: string
@@ -6236,19 +6211,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -6617,19 +6589,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -6962,18 +6931,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           apiUrl:
                             description: The VictorOps API URL.
@@ -7091,19 +7058,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -7451,19 +7415,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
@@ -7717,18 +7678,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                         type: object
                       type: array
@@ -7749,18 +7708,16 @@ spec:
                               key:
                                 description: The key of the secret to select from.  Must
                                   be a valid secret key.
+                                minLength: 1
                                 type: string
                               name:
-                                description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                  TODO: Add other useful fields. apiVersion, kind,
-                                  uid?'
+                                description: The name of the secret in the object's
+                                  namespace to select from.
+                                minLength: 1
                                 type: string
-                              optional:
-                                description: Specify whether the Secret or its key
-                                  must be defined
-                                type: boolean
                             required:
                             - key
+                            - name
                             type: object
                           apiURL:
                             description: The WeChat API URL.
@@ -7861,19 +7818,16 @@ spec:
                                   key:
                                     description: The key of the secret to select from.  Must
                                       be a valid secret key.
+                                    minLength: 1
                                     type: string
                                   name:
-                                    description: 'Name of the referent. More info:
-                                      https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                                      TODO: Add other useful fields. apiVersion, kind,
-                                      uid?'
+                                    description: The name of the secret in the object's
+                                      namespace to select from.
+                                    minLength: 1
                                     type: string
-                                  optional:
-                                    description: Specify whether the Secret or its
-                                      key must be defined
-                                    type: boolean
                                 required:
                                 - key
+                                - name
                                 type: object
                               followRedirects:
                                 description: FollowRedirects specifies whether the
