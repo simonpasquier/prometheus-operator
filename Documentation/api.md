@@ -34,6 +34,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [MetadataConfig](#metadataconfig)
 * [NamespaceSelector](#namespaceselector)
 * [OAuth2](#oauth2)
+* [ObjectReference](#objectreference)
 * [PodMetricsEndpoint](#podmetricsendpoint)
 * [PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig)
 * [PodMonitor](#podmonitor)
@@ -48,6 +49,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ProbeTargets](#probetargets)
 * [ProberSpec](#proberspec)
 * [Prometheus](#prometheus)
+* [PrometheusCondition](#prometheuscondition)
 * [PrometheusList](#prometheuslist)
 * [PrometheusRule](#prometheusrule)
 * [PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig)
@@ -69,6 +71,7 @@ This Document documents the types introduced by the Prometheus Operator to be co
 * [ServiceMonitor](#servicemonitor)
 * [ServiceMonitorList](#servicemonitorlist)
 * [ServiceMonitorSpec](#servicemonitorspec)
+* [ShardStatus](#shardstatus)
 * [Sigv4](#sigv4)
 * [StorageSpec](#storagespec)
 * [TLSConfig](#tlsconfig)
@@ -156,14 +159,14 @@ Alertmanager describes an Alertmanager cluster.
 
 ## AlertmanagerConfiguration
 
-AlertmanagerConfiguration used to set the global alertmanager config.
+AlertmanagerConfiguration defines the global Alertmanager configuration.
 
 
 <em>appears in: [AlertmanagerSpec](#alertmanagerspec)</em>
 
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
-| name | The name of the AlertmanagerConfig resource which holds the global configuration. It must be in the same namespace as the Alertmanager. | string | false |
+| name | The name of the AlertmanagerConfig resource which is used to generate the global configuration. It must be defined in the same namespace as the Alertmanager object. The operator will not enforce a `namespace` label for routes and inhibition rules. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -218,7 +221,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | imagePullSecrets | An optional list of references to secrets in the same namespace to use for pulling prometheus and alertmanager images from registries see http://kubernetes.io/docs/user-guide/images#specifying-imagepullsecrets-on-a-pod | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#localobjectreference-v1-core) | false |
 | secrets | Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/<secret-name>. | []string | false |
 | configMaps | ConfigMaps is a list of ConfigMaps in the same namespace as the Alertmanager object, which shall be mounted into the Alertmanager Pods. The ConfigMaps are mounted into /etc/alertmanager/configmaps/<configmap-name>. | []string | false |
-| configSecret | ConfigSecret is the name of a Kubernetes Secret in the same namespace as the Alertmanager object, which contains configuration for this Alertmanager instance. Defaults to 'alertmanager-<alertmanager-name>' The secret is mounted into /etc/alertmanager/config. | string | false |
+| configSecret | ConfigSecret is the name of a Kubernetes Secret in the same namespace as the Alertmanager object, which contains the configuration for this Alertmanager instance. If empty, it defaults to 'alertmanager-<alertmanager-name>'.\n\nThe Alertmanager configuration should be available under the `alertmanager.yaml` key. Additional keys from the original secret are copied to the generated secret.\n\nIf either the secret or the `alertmanager.yaml` key is missing, the operator provisions an Alertmanager configuration with one empty receiver (effectively dropping alert notifications). | string | false |
 | logLevel | Log level for Alertmanager to be configured with. | string | false |
 | logFormat | Log format for Alertmanager to be configured with. | string | false |
 | replicas | Size is the expected size of the alertmanager cluster. The controller will eventually make the size of the running cluster equal to the expected size. | *int32 | false |
@@ -250,7 +253,7 @@ AlertmanagerSpec is a specification of the desired behavior of the Alertmanager 
 | alertmanagerConfigSelector | AlertmanagerConfigs to be selected for to merge and configure Alertmanager with. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | alertmanagerConfigNamespaceSelector | Namespaces to be selected for AlertmanagerConfig discovery. If nil, only check own namespace. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. The specified global alertmanager config will not force add a namespace label in routes and inhibitRules. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
+| alertmanagerConfiguration | EXPERIMENTAL: alertmanagerConfiguration specifies the global Alertmanager configuration. If defined, it takes precedence over the `configSecret` field. This field may change in future releases. | *[AlertmanagerConfiguration](#alertmanagerconfiguration) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -357,8 +360,8 @@ Endpoint defines a scrapeable endpoint serving Prometheus metrics.
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
-| interval | Interval at which metrics should be scraped | string | false |
-| scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout after which the scrape is ended If not specified, the Prometheus global scrape timeout is used unless it is less than `Interval` in which the latter is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint | *[TLSConfig](#tlsconfig) | false |
 | bearerTokenFile | File to read bearer token for scraping targets. | string | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the service monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
@@ -384,7 +387,7 @@ MetadataConfig configures the sending of series metadata to the remote storage.
 | Field | Description | Scheme | Required |
 | ----- | ----------- | ------ | -------- |
 | send | Whether metric metadata is sent to the remote storage or not. | bool | false |
-| sendInterval | How frequently metric metadata is sent to the remote storage. | string | false |
+| sendInterval | How frequently metric metadata is sent to the remote storage. | Duration | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -419,6 +422,22 @@ OAuth2 allows an endpoint to authenticate with OAuth2. More info: https://promet
 
 [Back to TOC](#table-of-contents)
 
+## ObjectReference
+
+ObjectReference references a PodMonitor, ServiceMonitor, Probe or PrometheusRule object.
+
+
+<em>appears in: [PrometheusSpec](#prometheusspec), [ThanosRulerSpec](#thanosrulerspec)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| group | Group of the referent. When not specified, it defaults to `monitoring.coreos.com` | string | true |
+| resource | Resource of the referent. | string | true |
+| namespace | Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ | string | true |
+| name | Name of the referent. When not set, all resources are matched. | string | false |
+
+[Back to TOC](#table-of-contents)
+
 ## PodMetricsEndpoint
 
 PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Prometheus metrics.
@@ -433,8 +452,8 @@ PodMetricsEndpoint defines a scrapeable endpoint of a Kubernetes Pod serving Pro
 | path | HTTP path to scrape for metrics. | string | false |
 | scheme | HTTP scheme to use for scraping. | string | false |
 | params | Optional HTTP URL parameters | map[string][]string | false |
-| interval | Interval at which metrics should be scraped | string | false |
-| scrapeTimeout | Timeout after which the scrape is ended | string | false |
+| interval | Interval at which metrics should be scraped If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout after which the scrape is ended If not specified, the Prometheus global scrape interval is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[PodMetricsEndpointTLSConfig](#podmetricsendpointtlsconfig) | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the pod monitor and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | honorLabels | HonorLabels chooses the metric's labels on collisions with target labels. | bool | false |
@@ -551,8 +570,8 @@ ProbeSpec contains specification parameters for a Probe.
 | prober | Specification for the prober to use for probing targets. The prober.URL parameter is required. Targets cannot be probed if left empty. | [ProberSpec](#proberspec) | false |
 | module | The module to use for probing specifying how to probe the target. Example module configuring in the blackbox exporter: https://github.com/prometheus/blackbox_exporter/blob/master/example.yml | string | false |
 | targets | Targets defines a set of static or dynamically discovered targets to probe. | [ProbeTargets](#probetargets) | false |
-| interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | string | false |
-| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. | string | false |
+| interval | Interval at which targets are probed using the configured prober. If not specified Prometheus' global scrape interval is used. | Duration | false |
+| scrapeTimeout | Timeout for scraping metrics from the Prometheus exporter. If not specified, the Prometheus global scrape interval is used. | Duration | false |
 | tlsConfig | TLS configuration to use when scraping the endpoint. | *[ProbeTLSConfig](#probetlsconfig) | false |
 | bearerTokenSecret | Secret to mount to read bearer token for scraping targets. The secret needs to be in the same namespace as the probe and accessible by the Prometheus Operator. | [v1.SecretKeySelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#secretkeyselector-v1-core) | false |
 | basicAuth | BasicAuth allow an endpoint to authenticate over basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint | *[BasicAuth](#basicauth) | false |
@@ -655,7 +674,24 @@ Prometheus defines a Prometheus deployment.
 | ----- | ----------- | ------ | -------- |
 | metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#objectmeta-v1-meta) | false |
 | spec | Specification of the desired behavior of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | [PrometheusSpec](#prometheusspec) | true |
-| status | Most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | *[PrometheusStatus](#prometheusstatus) | false |
+| status | Most recent observed status of the Prometheus cluster. Read-only. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status | [PrometheusStatus](#prometheusstatus) | false |
+
+[Back to TOC](#table-of-contents)
+
+## PrometheusCondition
+
+PrometheusCondition represents the state of the resources associated with the Prometheus resource.
+
+
+<em>appears in: [PrometheusStatus](#prometheusstatus)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| type | Type of the condition being reported. | PrometheusConditionType | true |
+| status | status of the condition. | PrometheusConditionStatus | true |
+| lastTransitionTime | lastTransitionTime is the time of the last update to the current status property. | metav1.Time | true |
+| reason | Reason for the condition's last transition. | string | false |
+| message | Human-readable message indicating details for the condition's last transition. | string | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -751,11 +787,12 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | prometheusExternalLabelName | Name of Prometheus external label used to denote Prometheus instance name. Defaults to the value of `prometheus`. External label will _not_ be added when value is set to empty string (`\"\"`). | *string | false |
 | logLevel | Log level for Prometheus to be configured with. | string | false |
 | logFormat | Log format for Prometheus to be configured with. | string | false |
-| scrapeInterval | Interval between consecutive scrapes. Default: `1m` | string | false |
-| scrapeTimeout | Number of seconds to wait for target to respond before erroring. | string | false |
-| evaluationInterval | Interval between consecutive evaluations. Default: `1m` | string | false |
+| scrapeInterval | Interval between consecutive scrapes. Default: `30s` | Duration | false |
+| scrapeTimeout | Number of seconds to wait for target to respond before erroring. | Duration | false |
+| evaluationInterval | Interval between consecutive evaluations. Default: `30s` | Duration | false |
 | externalLabels | The labels to add to any time series or alerts when communicating with external systems (federation, remote storage, Alertmanager). | map[string]string | false |
 | enableAdminAPI | Enable access to prometheus web admin API. Defaults to the value of `false`. WARNING: Enabling the admin APIs enables mutating endpoints, to delete data, shutdown Prometheus, and more. Enabling this should be done with care and the user is advised to add additional authentication authorization via a proxy to ensure only clients authorized to perform these actions can do so. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#tsdb-admin-apis | bool | false |
+| enableRemoteWriteReceiver | Enable Prometheus to be used as a receiver for the Prometheus remote write protocol. Defaults to the value of `false`. WARNING: This is not considered an efficient way of ingesting samples. Use it with caution for specific low-volume use cases. It is not suitable for replacing the ingestion via scraping and turning Prometheus into a push-based metrics collection system. For more information see https://prometheus.io/docs/prometheus/latest/querying/api/#remote-write-receiver Only valid in Prometheus versions 2.33.0 and newer. | bool | false |
 | enableFeatures | Enable access to Prometheus disabled features. By default, no features are enabled. Enabling disabled features is entirely outside the scope of what the maintainers will support and by doing so, you accept that this behaviour may break at any time without notice. For more information see https://prometheus.io/docs/prometheus/latest/disabled_features/ | []string | false |
 | externalUrl | The external URL the Prometheus instances will be available under. This is necessary to generate correct URLs. This is necessary if Prometheus is not served from root of a DNS name. | string | false |
 | routePrefix | The route prefix Prometheus registers HTTP handlers for. This is useful, if using ExternalURL and a proxy is rewriting HTTP routes of a request, and the actual ExternalURL is still true, but the server serves requests under a different route prefix. For example for use with `kubectl proxy`. | string | false |
@@ -790,14 +827,15 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 | enforcedLabelLimit | Per-scrape limit on number of labels that will be accepted for a sample. If more than this number of labels are present post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 | enforcedLabelNameLengthLimit | Per-scrape limit on length of labels name that will be accepted for a sample. If a label name is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
 | enforcedLabelValueLengthLimit | Per-scrape limit on length of labels value that will be accepted for a sample. If a label value is longer than this number post metric-relabeling, the entire scrape will be treated as failed. 0 means no limit. Only valid in Prometheus versions 2.27.0 and newer. | *uint64 | false |
-| enforcedBodySizeLimit | EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer. | string | false |
+| enforcedBodySizeLimit | EnforcedBodySizeLimit defines the maximum size of uncompressed response body that will be accepted by Prometheus. Targets responding with a body larger than this many bytes will cause the scrape to fail. Example: 100MB. If defined, the limit will apply to all service/pod monitors and probes. This is an experimental feature, this behaviour could change or be removed in the future. Only valid in Prometheus versions 2.28.0 and newer. | ByteSize | false |
 | minReadySeconds | Minimum number of seconds for which a newly created pod should be ready without any of its container crashing for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready) This is an alpha field and requires enabling StatefulSetMinReadySeconds feature gate. | *uint32 | false |
-| retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | string | false |
-| retentionSize | Maximum amount of disk space used by blocks. Supported units: B, KB, MB, GB, TB, PB, EB. Ex: `512MB`. | string | false |
+| retention | Time duration Prometheus shall retain data for. Default is '24h' if retentionSize is not set, and must match the regular expression `[0-9]+(ms\|s\|m\|h\|d\|w\|y)` (milliseconds seconds minutes hours days weeks years). | Duration | false |
+| retentionSize | Maximum amount of disk space used by blocks. | ByteSize | false |
 | disableCompaction | Disable prometheus compaction. | bool | false |
 | walCompression | Enable compression of the write-ahead log using Snappy. This flag is only available in versions of Prometheus >= 2.11.0. | *bool | false |
 | rules | /--rules.*/ command-line arguments. | [Rules](#rules) | false |
-| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
+| excludedFromEnforcement | List of references to PodMonitor, ServiceMonitor, Probe and PrometheusRule objects to be excluded from enforcing a namespace label of origin. Applies only if enforcedNamespaceLabel set to true. | [][ObjectReference](#objectreference) | false |
+| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair. Deprecated: use excludedFromEnforcement instead. | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | query | QuerySpec defines the query command line flags when starting Prometheus. | *[QuerySpec](#queryspec) | false |
 | ruleSelector | A selector to select which PrometheusRules to mount for loading alerting/recording rules from. Until (excluding) Prometheus Operator v0.24.0 Prometheus Operator will migrate any legacy rule ConfigMaps to PrometheusRule custom resources selected by RuleSelector. Make sure it does not match any config maps that you do not want to be migrated. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for PrometheusRules discovery. If unspecified, only the same namespace as the Prometheus object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
@@ -813,7 +851,7 @@ PrometheusSpec is a specification of the desired behavior of the Prometheus clus
 
 ## PrometheusStatus
 
-PrometheusStatus is the most recent observed status of the Prometheus cluster. Read-only. Not included when requesting from the apiserver, only from the Prometheus Operator API itself. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+PrometheusStatus is the most recent observed status of the Prometheus cluster. More info: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
 
 
 <em>appears in: [Prometheus](#prometheus)</em>
@@ -825,6 +863,8 @@ PrometheusStatus is the most recent observed status of the Prometheus cluster. R
 | updatedReplicas | Total number of non-terminated pods targeted by this Prometheus deployment that have the desired version spec. | int32 | true |
 | availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this Prometheus deployment. | int32 | true |
 | unavailableReplicas | Total number of unavailable pods targeted by this Prometheus deployment. | int32 | true |
+| conditions | The current state of the Prometheus deployment. | [][PrometheusCondition](#prometheuscondition) | false |
+| shardStatuses | The list has one entry per shard. Each entry provides a summary of the shard status. | [][ShardStatus](#shardstatus) | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -840,7 +880,7 @@ QuerySpec defines the query command line flags when starting Prometheus.
 | lookbackDelta | The delta difference allowed for retrieving metrics during expression evaluations. | *string | false |
 | maxConcurrency | Number of concurrent queries that can be run at once. | *int32 | false |
 | maxSamples | Maximum number of samples a single query can load into memory. Note that queries will fail if they would load more samples than this into memory, so this also limits the number of samples a query can return. | *int32 | false |
-| timeout | Maximum time a query may take before being aborted. | *string | false |
+| timeout | Maximum time a query may take before being aborted. | *Duration | false |
 
 [Back to TOC](#table-of-contents)
 
@@ -896,7 +936,7 @@ RemoteReadSpec defines the configuration for Prometheus to read back samples fro
 | url | The URL of the endpoint to query from. | string | true |
 | name | The name of the remote read queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate read configurations.  Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | requiredMatchers | An optional list of equality matchers which have to be present in a selector to query the remote read endpoint. | map[string]string | false |
-| remoteTimeout | Timeout for requests to the remote read endpoint. | string | false |
+| remoteTimeout | Timeout for requests to the remote read endpoint. | Duration | false |
 | headers | Custom HTTP headers to be sent along with each remote read request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.26.0 and newer. | map[string]string | false |
 | readRecent | Whether reads should be made for queries for time ranges that the local storage should have complete data for. | bool | false |
 | basicAuth | BasicAuth for the URL. | *[BasicAuth](#basicauth) | false |
@@ -921,7 +961,7 @@ RemoteWriteSpec defines the configuration to write samples from Prometheus to a 
 | url | The URL of the endpoint to send samples to. | string | true |
 | name | The name of the remote write queue, it must be unique if specified. The name is used in metrics and logging in order to differentiate queues. Only valid in Prometheus versions 2.15.0 and newer. | string | false |
 | sendExemplars | Enables sending of exemplars over remote write. Note that exemplar-storage itself must be enabled using the enableFeature option for exemplars to be scraped in the first place.  Only valid in Prometheus versions 2.27.0 and newer. | *bool | false |
-| remoteTimeout | Timeout for requests to the remote write endpoint. | string | false |
+| remoteTimeout | Timeout for requests to the remote write endpoint. | Duration | false |
 | headers | Custom HTTP headers to be sent along with each remote write request. Be aware that headers that are set by Prometheus itself can't be overwritten. Only valid in Prometheus versions 2.25.0 and newer. | map[string]string | false |
 | writeRelabelConfigs | The list of remote write relabel configurations. | [][RelabelConfig](#relabelconfig) | false |
 | oauth2 | OAuth2 for the URL. Only valid in Prometheus versions 2.27.0 and newer. | *[OAuth2](#oauth2) | false |
@@ -1075,6 +1115,23 @@ ServiceMonitorSpec contains specification parameters for a ServiceMonitor.
 
 [Back to TOC](#table-of-contents)
 
+## ShardStatus
+
+
+
+
+<em>appears in: [PrometheusStatus](#prometheusstatus)</em>
+
+| Field | Description | Scheme | Required |
+| ----- | ----------- | ------ | -------- |
+| shardID | Identifier of the shard. | string | true |
+| replicas | Total number of pods targeted by this shard. | int32 | true |
+| updatedReplicas | Total number of non-terminated pods targeted by this shard that have the desired spec. | int32 | true |
+| availableReplicas | Total number of available pods (ready for at least minReadySeconds) targeted by this shard. | int32 | true |
+| unavailableReplicas | Total number of unavailable pods targeted by this shard. | int32 | true |
+
+[Back to TOC](#table-of-contents)
+
 ## Sigv4
 
 Sigv4 optionally configures AWS's Signature Verification 4 signing process to sign requests. Cannot be set at the same time as basic_auth or authorization.
@@ -1152,7 +1209,7 @@ ThanosSpec defines parameters for a Prometheus server within a Thanos deployment
 | logLevel | LogLevel for Thanos sidecar to be configured with. | string | false |
 | logFormat | LogFormat for Thanos sidecar to be configured with. | string | false |
 | minTime | MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y. | string | false |
-| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | string | false |
+| readyTimeout | ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m | Duration | false |
 | volumeMounts | VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition. VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container. | []v1.VolumeMount | false |
 
 [Back to TOC](#table-of-contents)
@@ -1252,7 +1309,8 @@ ThanosRulerSpec is a specification of the desired behavior of the ThanosRuler. M
 | ruleSelector | A label selector to select which PrometheusRules to mount for alerting and recording. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | ruleNamespaceSelector | Namespaces to be selected for Rules discovery. If unspecified, only the same namespace as the ThanosRuler object is in is used. | *[metav1.LabelSelector](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.23/#labelselector-v1-meta) | false |
 | enforcedNamespaceLabel | EnforcedNamespaceLabel enforces adding a namespace label of origin for each alert and metric that is user created. The label value will always be the namespace of the object that is being created. | string | false |
-| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
+| excludedFromEnforcement | List of references to PrometheusRule objects to be excluded from enforcing a namespace label of origin. Applies only if enforcedNamespaceLabel set to true. | [][ObjectReference](#objectreference) | false |
+| prometheusRulesExcludedFromEnforce | PrometheusRulesExcludedFromEnforce - list of Prometheus rules to be excluded from enforcing of adding namespace labels. Works only if enforcedNamespaceLabel set to true. Make sure both ruleNamespace and ruleName are set for each pair Deprecated: use excludedFromEnforcement instead. | [][PrometheusRuleExcludeConfig](#prometheusruleexcludeconfig) | false |
 | logLevel | Log level for ThanosRuler to be configured with. | string | false |
 | logFormat | Log format for ThanosRuler to be configured with. | string | false |
 | portName | Port name used for the pods and governing service. This defaults to web | string | false |
@@ -1470,6 +1528,8 @@ OpsGenieConfig configures notifications via OpsGenie. See https://prometheus.io/
 | details | A set of arbitrary key/value pairs that provide further detail about the incident. | [][KeyValue](#keyvalue) | false |
 | responders | List of responders responsible for notifications. | [][OpsGenieConfigResponder](#opsgenieconfigresponder) | false |
 | httpConfig | HTTP client configuration. | *[HTTPConfig](#httpconfig) | false |
+| entity | Optional field that can be used to specify which domain alert is related to. | string | false |
+| actions | Comma separated list of actions that will be available for the alert. | string | false |
 
 [Back to TOC](#table-of-contents)
 
