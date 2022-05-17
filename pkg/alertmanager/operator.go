@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation"
+	validationv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/alertmanager/validation/v1alpha1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	monitoringv1alpha1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/assets"
@@ -904,7 +906,7 @@ func (c *Operator) loadConfigurationFromSecret(ctx context.Context, am *monitori
 func (c *Operator) provisionAlertmanagerConfiguration(ctx context.Context, am *monitoringv1.Alertmanager, store *assets.Store) error {
 	namespacedLogger := log.With(c.logger, "alertmanager", am.Name, "namespace", am.Namespace)
 
-	if err := ValidateAlertmanager(am); err != nil {
+	if err := validation.ValidateAlertmanager(am); err != nil {
 		return err
 	}
 
@@ -1111,7 +1113,7 @@ func (c *Operator) selectAlertmanagerConfigs(ctx context.Context, am *monitoring
 // checkAlertmanagerConfigResource verifies that an AlertmanagerConfig object is valid
 // for the given Alertmanager version and has no missing references to other objects.
 func checkAlertmanagerConfigResource(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerConfig, amVersion semver.Version, store *assets.Store) error {
-	if err := ValidateAlertmanagerConfig(amc); err != nil {
+	if err := validationv1alpha1.ValidateAlertmanagerConfig(amc); err != nil {
 		return err
 	}
 
@@ -1217,6 +1219,11 @@ func checkReceivers(ctx context.Context, amc *monitoringv1alpha1.AlertmanagerCon
 		}
 
 		err = checkSnsConfigs(ctx, receiver.SNSConfigs, amc.GetNamespace(), amcKey, store, amVersion)
+		if err != nil {
+			return err
+		}
+
+		err = checkTelegramConfigs(ctx, receiver.TelegramConfigs, amc.GetNamespace(), amcKey, store, amVersion)
 		if err != nil {
 			return err
 		}
@@ -1335,7 +1342,7 @@ func checkWebhookConfigs(
 			if err != nil {
 				return err
 			}
-			if _, err := ValidateURL(strings.TrimSpace(url)); err != nil {
+			if _, err := validation.ValidateURL(strings.TrimSpace(url)); err != nil {
 				return errors.Wrapf(err, "webhook 'url' %s invalid", url)
 			}
 		}
@@ -1487,6 +1494,43 @@ func checkSnsConfigs(
 			return err
 		}
 	}
+	return nil
+}
+
+func checkTelegramConfigs(
+	ctx context.Context,
+	configs []monitoringv1alpha1.TelegramConfig,
+	namespace string,
+	key string,
+	store *assets.Store,
+	amVersion semver.Version,
+) error {
+	if len(configs) == 0 {
+		return nil
+	}
+
+	if amVersion.LT(semver.MustParse("0.24.0")) {
+		return fmt.Errorf(`telegramConfigs' is available in Alertmanager >= 0.24.0 only - current %s`, amVersion)
+	}
+
+	for i, config := range configs {
+		if err := checkHTTPConfig(ctx, config.HTTPConfig, amVersion); err != nil {
+			return err
+		}
+
+		telegramConfigKey := fmt.Sprintf("%s/telegram/%d", key, i)
+
+		if config.BotToken != nil {
+			if _, err := store.GetSecretKey(ctx, namespace, *config.BotToken); err != nil {
+				return err
+			}
+		}
+
+		if err := configureHTTPConfigInStore(ctx, config.HTTPConfig, namespace, telegramConfigKey, store); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
