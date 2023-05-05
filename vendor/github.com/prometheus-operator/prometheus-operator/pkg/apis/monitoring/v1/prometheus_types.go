@@ -15,11 +15,12 @@
 package v1
 
 import (
+	"strings"
+
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"strings"
 )
 
 const (
@@ -28,6 +29,27 @@ const (
 	PrometheusKindKey = "prometheus"
 )
 
+// PrometheusInterface is used by Prometheus and PrometheusAgent to share common methods, e.g. config generation.
+// +k8s:deepcopy-gen=false
+type PrometheusInterface interface {
+	metav1.ObjectMetaAccessor
+	GetTypeMeta() metav1.TypeMeta
+	GetCommonPrometheusFields() CommonPrometheusFields
+	SetCommonPrometheusFields(CommonPrometheusFields)
+}
+
+func (l *Prometheus) GetCommonPrometheusFields() CommonPrometheusFields {
+	return l.Spec.CommonPrometheusFields
+}
+
+func (l *Prometheus) SetCommonPrometheusFields(f CommonPrometheusFields) {
+	l.Spec.CommonPrometheusFields = f
+}
+
+func (l *Prometheus) GetTypeMeta() metav1.TypeMeta {
+	return l.TypeMeta
+}
+
 // CommonPrometheusFields are the options available to both the Prometheus server and agent.
 // +k8s:deepcopy-gen=true
 type CommonPrometheusFields struct {
@@ -35,8 +57,8 @@ type CommonPrometheusFields struct {
 	PodMetadata *EmbeddedObjectMetadata `json:"podMetadata,omitempty"`
 	// ServiceMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -49,8 +71,8 @@ type CommonPrometheusFields struct {
 	ServiceMonitorNamespaceSelector *metav1.LabelSelector `json:"serviceMonitorNamespaceSelector,omitempty"`
 	// *Experimental* PodMonitors to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -63,8 +85,8 @@ type CommonPrometheusFields struct {
 	PodMonitorNamespaceSelector *metav1.LabelSelector `json:"podMonitorNamespaceSelector,omitempty"`
 	// *Experimental* Probes to be selected for target discovery.
 	//
-	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector` and
-	// `spec.probeSelector` are null, the Prometheus configuration is unmanaged.
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
 	// The Prometheus operator will ensure that the Prometheus configuration's
 	// Secret exists, but it is the responsibility of the user to provide the raw
 	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
@@ -74,6 +96,20 @@ type CommonPrometheusFields struct {
 	ProbeSelector *metav1.LabelSelector `json:"probeSelector,omitempty"`
 	// *Experimental* Namespaces to be selected for Probe discovery. If nil, only check own namespace.
 	ProbeNamespaceSelector *metav1.LabelSelector `json:"probeNamespaceSelector,omitempty"`
+	// *Experimental* ScrapeConfigs to be selected for target discovery.
+	//
+	// If `spec.serviceMonitorSelector`, `spec.podMonitorSelector`, `spec.probeSelector`
+	// and `spec.scrapeConfigSelector` are null, the Prometheus configuration is unmanaged.
+	// The Prometheus operator will ensure that the Prometheus configuration's
+	// Secret exists, but it is the responsibility of the user to provide the raw
+	// gzipped Prometheus configuration under the `prometheus.yaml.gz` key.
+	// This behavior is deprecated and will be removed in the next major version
+	// of the custom resource definition. It is recommended to use
+	// `spec.additionalScrapeConfigs` instead.
+	ScrapeConfigSelector *metav1.LabelSelector `json:"scrapeConfigSelector,omitempty"`
+	// Namespace's labels to match for ScrapeConfig discovery. If nil, only
+	// check own namespace.
+	ScrapeConfigNamespaceSelector *metav1.LabelSelector `json:"scrapeConfigNamespaceSelector,omitempty"`
 	// Version of Prometheus to be deployed.
 	Version string `json:"version,omitempty"`
 	// When a Prometheus deployment is paused, no actions except for deletion
@@ -233,7 +269,8 @@ type CommonPrometheusFields struct {
 	// Priority class assigned to the Pods
 	PriorityClassName string `json:"priorityClassName,omitempty"`
 	// Port name used for the pods and governing service.
-	// This defaults to web
+	// Defaults to `web`.
+	// +kubebuilder:default:="web"
 	PortName string `json:"portName,omitempty"`
 	// ArbitraryFSAccessThroughSMs configures whether configuration
 	// based on a service monitor can access arbitrary files on the file system
@@ -460,9 +497,6 @@ type PrometheusSpec struct {
 	//
 	// This section is experimental, it may change significantly without
 	// deprecation notice in any release.
-	//
-	// This is experimental and may change significantly without backward
-	// compatibility in any release.
 	Thanos *ThanosSpec `json:"thanos,omitempty"`
 	// QueryLogFile specifies the file to which PromQL queries are logged.
 	// If the filename has an empty path, e.g. 'query.log', prometheus-operator will mount the file into an
@@ -642,8 +676,16 @@ type ThanosSpec struct {
 	LogFormat string `json:"logFormat,omitempty"`
 	// MinTime for Thanos sidecar to be configured with. Option can be a constant time in RFC3339 format or time duration relative to current time, such as -1d or 2h45m. Valid duration units are ms, s, m, h, d, w, y.
 	MinTime string `json:"minTime,omitempty"`
+	// BlockDuration controls the size of TSDB blocks produced by Prometheus. Default is 2h to match the upstream Prometheus defaults.
+	// WARNING: Changing the block duration can impact the performance and efficiency of the entire Prometheus/Thanos stack due to how it interacts with memory and Thanos compactors. It is recommended to keep this value set to a multiple of 120 times your longest scrape or rule interval. For example, 30s * 120 = 1h.
+	// +kubebuilder:default:="2h"
+	BlockDuration Duration `json:"blockSize,omitempty"`
 	// ReadyTimeout is the maximum time Thanos sidecar will wait for Prometheus to start. Eg 10m
 	ReadyTimeout Duration `json:"readyTimeout,omitempty"`
+	// How often to retrieve the Prometheus configuration.
+	GetConfigInterval Duration `json:"getConfigInterval,omitempty"`
+	// Maximum time to wait when retrieving the Prometheus configuration.
+	GetConfigTimeout Duration `json:"getConfigTimeout,omitempty"`
 	// VolumeMounts allows configuration of additional VolumeMounts on the output StatefulSet definition.
 	// VolumeMounts specified will be appended to other VolumeMounts in the thanos-sidecar container.
 	VolumeMounts []v1.VolumeMount `json:"volumeMounts,omitempty"`
@@ -806,7 +848,7 @@ type RelabelConfig struct {
 	Replacement string `json:"replacement,omitempty"`
 	//Action to perform based on regex matching. Default is 'replace'.
 	//uppercase and lowercase actions require Prometheus >= 2.36.
-	//+kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase
+	//+kubebuilder:validation:Enum=replace;Replace;keep;Keep;drop;Drop;hashmod;HashMod;labelmap;LabelMap;labeldrop;LabelDrop;labelkeep;LabelKeep;lowercase;Lowercase;uppercase;Uppercase;keepequal;KeepEqual;dropequal;DropEqual
 	//+kubebuilder:default=replace
 	Action string `json:"action,omitempty"`
 }
