@@ -250,7 +250,11 @@
                                   "lowercase",
                                   "Lowercase",
                                   "uppercase",
-                                  "Uppercase"
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
                                 ],
                                 "type": "string"
                               },
@@ -439,7 +443,11 @@
                                   "lowercase",
                                   "Lowercase",
                                   "uppercase",
-                                  "Uppercase"
+                                  "Uppercase",
+                                  "keepequal",
+                                  "KeepEqual",
+                                  "dropequal",
+                                  "DropEqual"
                                 ],
                                 "type": "string"
                               },
@@ -479,7 +487,11 @@
                           "type": "array"
                         },
                         "scheme": {
-                          "description": "HTTP scheme to use for scraping.",
+                          "description": "HTTP scheme to use for scraping. `http` and `https` are the expected values unless you rewrite the `__scheme__` label via relabeling. If empty, Prometheus uses the default value `http`.",
+                          "enum": [
+                            "http",
+                            "https"
+                          ],
                           "type": "string"
                         },
                         "scrapeTimeout": {

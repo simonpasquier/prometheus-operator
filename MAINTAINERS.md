@@ -8,7 +8,7 @@
 | Simon Pasquier    | pasquier.simon@gmail.com  | `@SimonPasquier`     | [@simonpasquier](https://github.com/simonpasquier) | Red Hat       |
 | Vasily Sliouniaev |                           | `@vas`               | [@vsliouniaev](https://github.com/vsliouniaev)     |               |
 | Kemal Akkoyun     | kakkoyun@gmail.com        | `@kakkoyun`          | [@kakkoyun](https://github.com/kakkoyun)           | Polar Signals |
-| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Gitpod        |
+| Arthur Silva Sens | arthursens2005@gmail.com  | `@Arthur Silva Sens` | [@ArthurSens](https://github.com/ArthurSens)       | Coralogix     |
 | Filip Petkovski   | filip.petkovsky@gmail.com | `@fpetkovski`        | [@fpetkovski](https://github.com/fpetkovski)       | Red Hat       |
 | Philip Gough      | philip.p.gough@gmail.com  | `@pgough`            | [@PhilipGough](https://github.com/PhilipGough)     | Red Hat       |
 
@@ -20,10 +20,11 @@ We also have some nice souls that help triaging issues and PRs. See [here](https
 
 Full list of triage people is displayed below:
 
-| Name            | Slack         | GitHub                                       | Company         |
-|-----------------|---------------|----------------------------------------------|-----------------|
-| Noah Kantrowitz | `@coderanger` | [@coderanger](https://github.com/coderanger) | Geomagical/IKEA |
-| Jayapriya Pai   | `@slashpai`   | [@slashpai](https://github.com/slashpai)     | Red Hat         |
+| Name            | Slack              | GitHub                                                 | Company         |
+|-----------------|--------------------|--------------------------------------------------------|-----------------|
+| Noah Kantrowitz | `@coderanger`      | [@coderanger](https://github.com/coderanger)           | Geomagical/IKEA |
+| Jayapriya Pai   | `@slashpai`        | [@slashpai](https://github.com/slashpai)               | Red Hat         |
+| João Marçal     | `@JoaoBraveCoding` | [@JoaoBraveCoding](https://github.com/JoaoBraveCoding) | Red Hat         |
 
 ## Emeritus maintainers
 

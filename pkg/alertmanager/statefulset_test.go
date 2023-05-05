@@ -24,6 +24,7 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus-operator/prometheus-operator/pkg/operator"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -441,6 +442,109 @@ func TestMakeStatefulSetSpecWebRoutePrefix(t *testing.T) {
 	}
 }
 
+func TestMakeStatefulSetSpecWebTimeout(t *testing.T) {
+
+	tt := []struct {
+		scenario         string
+		version          string
+		web              *monitoringv1.AlertmanagerWebSpec
+		expectTimeoutArg bool
+	}{{
+		scenario:         "no timeout by default",
+		version:          operator.DefaultAlertmanagerVersion,
+		web:              nil,
+		expectTimeoutArg: false,
+	}, {
+		scenario: "no timeout for old version",
+		version:  "0.16.9",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			Timeout: toPtr(uint32(50)),
+		},
+		expectTimeoutArg: false,
+	}, {
+		scenario: "timeout arg set if specified",
+		version:  operator.DefaultAlertmanagerVersion,
+		web: &monitoringv1.AlertmanagerWebSpec{
+			Timeout: toPtr(uint32(50)),
+		},
+		expectTimeoutArg: true,
+	}}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Web = ts.web
+
+			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			args := ss.Template.Spec.Containers[0].Args
+			if got := slices.ContainsFunc(args, containsString("-web.timeout")); got != ts.expectTimeoutArg {
+				t.Fatalf("expected alertmanager args %v web.timeout to be %v but is %v", args, ts.expectTimeoutArg, got)
+			}
+
+		})
+	}
+}
+
+func TestMakeStatefulSetSpecWebConcurrency(t *testing.T) {
+
+	tt := []struct {
+		scenario                string
+		version                 string
+		web                     *monitoringv1.AlertmanagerWebSpec
+		expectGetConcurrencyArg bool
+	}{{
+		scenario:                "no get-concurrency by default",
+		version:                 operator.DefaultAlertmanagerVersion,
+		web:                     nil,
+		expectGetConcurrencyArg: false,
+	}, {
+		scenario: "no get-concurrency for old version",
+		version:  "0.16.9",
+		web: &monitoringv1.AlertmanagerWebSpec{
+			GetConcurrency: toPtr(uint32(50)),
+		},
+		expectGetConcurrencyArg: false,
+	}, {
+		scenario: "get-concurrency arg set if specified",
+		version:  operator.DefaultAlertmanagerVersion,
+
+		web: &monitoringv1.AlertmanagerWebSpec{
+			GetConcurrency: toPtr(uint32(50)),
+		},
+		expectGetConcurrencyArg: true,
+	}}
+
+	for _, ts := range tt {
+		ts := ts
+		t.Run(ts.scenario, func(t *testing.T) {
+			a := monitoringv1.Alertmanager{}
+			a.Spec.Replicas = toPtr(int32(1))
+
+			a.Spec.Version = ts.version
+			a.Spec.Web = ts.web
+
+			ss, err := makeStatefulSetSpec(&a, defaultTestConfig, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			args := ss.Template.Spec.Containers[0].Args
+			if got := slices.ContainsFunc(args, containsString("-web.get-concurrency")); got != ts.expectGetConcurrencyArg {
+				t.Fatalf("expected alertmanager args %v web.get-concurrency to be %v but is %v", args, ts.expectGetConcurrencyArg, got)
+			}
+
+		})
+	}
+}
+
 func TestMakeStatefulSetSpecPeersWithoutClusterDomain(t *testing.T) {
 	replicas := int32(1)
 	a := monitoringv1.Alertmanager{
@@ -559,7 +663,7 @@ func TestMakeStatefulSetSpecNotificationTemplates(t *testing.T) {
 
 	var foundVM, foundV bool
 	for _, vm := range statefulSet.Template.Spec.Containers[0].VolumeMounts {
-		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerNotificationTemplatesDir {
+		if vm.Name == "notification-templates" && vm.MountPath == alertmanagerTemplatesDir {
 			foundVM = true
 			break
 		}
@@ -1010,4 +1114,50 @@ func TestPodTemplateConfig(t *testing.T) {
 			t.Fatalf("expected imagePullPolicy to match, want %s, got %s", imagePullPolicy, sset.Spec.Template.Spec.Containers[0].ImagePullPolicy)
 		}
 	}
+}
+
+func TestConfigReloader(t *testing.T) {
+	baseSet, err := makeStatefulSet(&monitoringv1.Alertmanager{}, defaultTestConfig, "", nil)
+	require.NoError(t, err)
+
+	expectedArgsConfigReloader := []string{
+		"--listen-address=:8080",
+		"--reload-url=http://localhost:9093/-/reload",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd container args are %s, but found %s", expectedArgsConfigReloader, c.Args)
+			}
+		}
+	}
+
+	expectedArgsInitConfigReloader := []string{
+		"--watch-interval=0",
+		"--listen-address=:8080",
+		"--config-file=/etc/alertmanager/config/alertmanager.yaml.gz",
+		"--config-envsubst-file=/etc/alertmanager/config_out/alertmanager.env.yaml",
+	}
+
+	for _, c := range baseSet.Spec.Template.Spec.Containers {
+		if c.Name == "init-config-reloader" {
+			if !reflect.DeepEqual(c.Args, expectedArgsConfigReloader) {
+				t.Fatalf("expectd init container args are %s, but found %s", expectedArgsInitConfigReloader, c.Args)
+			}
+		}
+	}
+
+}
+
+func containsString(sub string) func(string) bool {
+	return func(x string) bool {
+		return strings.Contains(x, sub)
+	}
+}
+
+func toPtr[T any](t T) *T {
+	return &t
 }
