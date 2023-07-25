@@ -550,33 +550,61 @@ type CommonPrometheusFields struct {
 	//
 	// +optional
 	TracingConfig *PrometheusTracingConfig `json:"tracingConfig,omitempty"`
+
 	// BodySizeLimit defines per-scrape on response body size.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	BodySizeLimit *ByteSize `json:"bodySizeLimit,omitempty"`
-	// SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+
+	// SampleLimit defines per-scrape limit on number of scraped samples that
+	// will be accepted.
+	//
+	// Unlike `.spec.enforcedSampleLimit`, it doesn't override the value
+	// defined by ServiceMonitor, PodMonitor, Probe objects.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	SampleLimit *uint64 `json:"sampleLimit,omitempty"`
+
 	// TargetLimit defines a limit on the number of scraped targets that will be accepted.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Unlike `.spec.enforcedTargetLimit`, it doesn't override the value
+	// defined by ServiceMonitor, PodMonitor, Probe objects.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	TargetLimit *uint64 `json:"targetLimit,omitempty"`
+
 	// Per-scrape limit on number of labels that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Unlike `.spec.enforcedLabelLimit`, it doesn't override the value
+	// defined by ServiceMonitor, PodMonitor, Probe objects.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	LabelLimit *uint64 `json:"labelLimit,omitempty"`
+
 	// Per-scrape limit on length of labels name that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Unlike `.spec.enforcedLabelNameLengthLimit`, it doesn't override the
+	// value defined by ServiceMonitor, PodMonitor, Probe objects.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	LabelNameLengthLimit *uint64 `json:"labelNameLengthLimit,omitempty"`
+
 	// Per-scrape limit on length of labels value that will be accepted for a sample.
-	// Only valid in Prometheus versions 2.45.0 and newer.
+	//
+	// Unlike `.spec.enforcedLabelValueLengthLimit`, it doesn't override the
+	// value defined by ServiceMonitor, PodMonitor, Probe objects.
+	//
+	// It requires Prometheus >= v2.45.0.
 	//
 	// +optional
 	LabelValueLengthLimit *uint64 `json:"labelValueLengthLimit,omitempty"`

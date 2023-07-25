@@ -1403,7 +1403,7 @@
                     "type": "string"
                   },
                   "bodySizeLimit": {
-                    "description": "BodySizeLimit defines per-scrape on response body size. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "BodySizeLimit defines per-scrape on response body size. \n It requires Prometheus >= v2.45.0.",
                     "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
                     "type": "string"
                   },
@@ -3951,17 +3951,17 @@
                     "type": "array"
                   },
                   "labelLimit": {
-                    "description": "Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "Per-scrape limit on number of labels that will be accepted for a sample. \n Unlike `.spec.enforcedLabelLimit`, it doesn't override the value defined by ServiceMonitor, PodMonitor, Probe objects. \n It requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelNameLengthLimit": {
-                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "Per-scrape limit on length of labels name that will be accepted for a sample. \n Unlike `.spec.enforcedLabelNameLengthLimit`, it doesn't override the value defined by ServiceMonitor, PodMonitor, Probe objects. \n It requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },
                   "labelValueLengthLimit": {
-                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "Per-scrape limit on length of labels value that will be accepted for a sample. \n Unlike `.spec.enforcedLabelValueLengthLimit`, it doesn't override the value defined by ServiceMonitor, PodMonitor, Probe objects. \n It requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -5451,7 +5451,7 @@
                     "type": "object"
                   },
                   "sampleLimit": {
-                    "description": "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "SampleLimit defines per-scrape limit on number of scraped samples that will be accepted. \n Unlike `.spec.enforcedSampleLimit`, it doesn't override the value defined by ServiceMonitor, PodMonitor, Probe objects. \n It requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },
@@ -6317,7 +6317,7 @@
                     "type": "string"
                   },
                   "targetLimit": {
-                    "description": "TargetLimit defines a limit on the number of scraped targets that will be accepted. Only valid in Prometheus versions 2.45.0 and newer.",
+                    "description": "TargetLimit defines a limit on the number of scraped targets that will be accepted. \n Unlike `.spec.enforcedTargetLimit`, it doesn't override the value defined by ServiceMonitor, PodMonitor, Probe objects. \n It requires Prometheus >= v2.45.0.",
                     "format": "int64",
                     "type": "integer"
                   },

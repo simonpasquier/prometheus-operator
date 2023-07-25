@@ -2369,8 +2369,8 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>BodySizeLimit defines per-scrape on response body size.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>BodySizeLimit defines per-scrape on response body size.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -2382,8 +2382,11 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that
+will be accepted.</p>
+<p>Unlike <code>.spec.enforcedSampleLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -2395,8 +2398,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+<p>Unlike <code>.spec.enforcedTargetLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -2408,8 +2413,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -2421,8 +2428,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelNameLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -2434,8 +2443,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelValueLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6488,8 +6499,8 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>BodySizeLimit defines per-scrape on response body size.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>BodySizeLimit defines per-scrape on response body size.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6501,8 +6512,11 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that
+will be accepted.</p>
+<p>Unlike <code>.spec.enforcedSampleLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6514,8 +6528,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+<p>Unlike <code>.spec.enforcedTargetLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6527,8 +6543,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6540,8 +6558,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelNameLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -6553,8 +6573,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelValueLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 </tbody>
@@ -10160,8 +10182,8 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>BodySizeLimit defines per-scrape on response body size.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>BodySizeLimit defines per-scrape on response body size.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -10173,8 +10195,11 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that
+will be accepted.</p>
+<p>Unlike <code>.spec.enforcedSampleLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -10186,8 +10211,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+<p>Unlike <code>.spec.enforcedTargetLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -10199,8 +10226,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -10212,8 +10241,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelNameLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -10225,8 +10256,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelValueLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15407,8 +15440,8 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>BodySizeLimit defines per-scrape on response body size.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>BodySizeLimit defines per-scrape on response body size.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15420,8 +15453,11 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that
+will be accepted.</p>
+<p>Unlike <code>.spec.enforcedSampleLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15433,8 +15469,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+<p>Unlike <code>.spec.enforcedTargetLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15446,8 +15484,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15459,8 +15499,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelNameLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -15472,8 +15514,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelValueLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 </table>
@@ -18789,8 +18833,8 @@ ByteSize
 </td>
 <td>
 <em>(Optional)</em>
-<p>BodySizeLimit defines per-scrape on response body size.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>BodySizeLimit defines per-scrape on response body size.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -18802,8 +18846,11 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>SampleLimit defines per-scrape limit on number of scraped samples that
+will be accepted.</p>
+<p>Unlike <code>.spec.enforcedSampleLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -18815,8 +18862,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>TargetLimit defines a limit on the number of scraped targets that will be accepted.</p>
+<p>Unlike <code>.spec.enforcedTargetLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -18828,8 +18877,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on number of labels that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on number of labels that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelLimit</code>, it doesn&rsquo;t override the value
+defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -18841,8 +18892,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels name that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels name that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelNameLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 <tr>
@@ -18854,8 +18907,10 @@ uint64
 </td>
 <td>
 <em>(Optional)</em>
-<p>Per-scrape limit on length of labels value that will be accepted for a sample.
-Only valid in Prometheus versions 2.45.0 and newer.</p>
+<p>Per-scrape limit on length of labels value that will be accepted for a sample.</p>
+<p>Unlike <code>.spec.enforcedLabelValueLengthLimit</code>, it doesn&rsquo;t override the
+value defined by ServiceMonitor, PodMonitor, Probe objects.</p>
+<p>It requires Prometheus &gt;= v2.45.0.</p>
 </td>
 </tr>
 </tbody>
