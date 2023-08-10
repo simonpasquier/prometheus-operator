@@ -121,7 +121,7 @@ func TestAddBearerToken(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			store := NewStore(c.CoreV1(), c.CoreV1())
 
-			sel := v1.SecretKeySelector{
+			sel := &v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: tc.selectedName,
 				},
