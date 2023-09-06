@@ -2789,11 +2789,10 @@ func testPromGetAuthSecret(t *testing.T) {
 // sub-tests.
 func testOperatorNSScope(t *testing.T) {
 	name := "test"
-	firtAlertName := "firstAlert"
+	firstAlertName := "firstAlert"
 	secondAlertName := "secondAlert"
 
 	t.Run("SingleNS", func(t *testing.T) {
-
 		testCtx := framework.NewTestCtx(t)
 		defer testCtx.Cleanup(t)
 
@@ -2819,13 +2818,20 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ruleDef := []struct {
-			NSName    string
-			AlertName string
-		}{{arbitraryNS, secondAlertName}, {mainNS, firtAlertName}}
-
-		for _, r := range ruleDef {
-			_, err := framework.MakeAndCreateFiringRule(context.Background(), r.NSName, name, r.AlertName)
+		for _, r := range []struct {
+			namespace string
+			alert     string
+		}{
+			{
+				namespace: arbitraryNS,
+				alert:     secondAlertName,
+			},
+			{
+				namespace: mainNS,
+				alert:     firstAlertName,
+			},
+		} {
+			_, err := framework.MakeAndCreateFiringRule(context.Background(), r.namespace, name, r.alert)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2848,7 +2854,7 @@ func testOperatorNSScope(t *testing.T) {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
 
-		err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firtAlertName)
+		err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firstAlertName)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2890,13 +2896,20 @@ func testOperatorNSScope(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ruleDef := []struct {
-			NSName    string
-			AlertName string
-		}{{arbitraryNS, secondAlertName}, {ruleNS, firtAlertName}}
-
-		for _, r := range ruleDef {
-			_, err := framework.MakeAndCreateFiringRule(context.Background(), r.NSName, name, r.AlertName)
+		for _, r := range []struct {
+			namespace string
+			alert     string
+		}{
+			{
+				namespace: arbitraryNS,
+				alert:     secondAlertName,
+			},
+			{
+				namespace: ruleNS,
+				alert:     firstAlertName,
+			},
+		} {
+			_, err := framework.MakeAndCreateFiringRule(context.Background(), r.namespace, name, r.alert)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -2919,7 +2932,7 @@ func testOperatorNSScope(t *testing.T) {
 			testCtx.AddFinalizerFn(finalizerFn)
 		}
 
-		err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firtAlertName)
+		err = framework.WaitForPrometheusFiringAlert(context.Background(), p.Namespace, pSVC.Name, firstAlertName)
 		if err != nil {
 			t.Fatal(err)
 		}
