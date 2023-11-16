@@ -116,7 +116,7 @@ func (tc *TLSConfig) Convert(logger log.Logger) (*tls.Config, error) {
 	case tls.VersionTLS12:
 	case tls.VersionTLS13:
 	default:
-		return nil, fmt.Errorf("TLS version %q isn't supported", tls.VersionName(version))
+		return nil, fmt.Errorf("TLS version %q isn't supported", tc.MinVersion)
 	}
 
 	tlsCfg.MinVersion = version
