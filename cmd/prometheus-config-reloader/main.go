@@ -82,15 +82,16 @@ func main() {
 		"[EXPERIMENTAL] Path to configuration file that can enable TLS or authentication. See: https://prometheus.io/docs/prometheus/latest/configuration/https/",
 	).Default("").String()
 
-	logFormat := app.Flag(
+	var logConfig logging.Config
+	app.Flag(
 		"log-format",
 		fmt.Sprintf("log format to use. Possible values: %s", strings.Join(logging.AvailableLogFormats, ", "))).
-		Default(logging.FormatLogFmt).String()
+		Default(logging.FormatLogFmt).StringVar(&logConfig.Format)
 
-	logLevel := app.Flag(
+	app.Flag(
 		"log-level",
 		fmt.Sprintf("log level to use. Possible values: %s", strings.Join(logging.AvailableLogLevels, ", "))).
-		Default(logging.LevelInfo).String()
+		Default(logging.LevelInfo).StringVar(&logConfig.Level)
 
 	reloadURL := app.Flag("reload-url", "reload URL to trigger Prometheus reload on").
 		Default("http://127.0.0.1:9090/-/reload").URL()
@@ -98,7 +99,7 @@ func main() {
 	versionutil.RegisterIntoKingpinFlags(app)
 
 	if _, err := app.Parse(os.Args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stdout, err)
 		os.Exit(2)
 	}
 
@@ -107,7 +108,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	logger, err := logging.NewLogger(*logLevel, *logFormat)
+	logger, err := logging.NewLogger(logConfig)
 	if err != nil {
 		stdlog.Fatal(err)
 	}
@@ -196,7 +197,7 @@ func main() {
 	}, func(error) {})
 
 	if err := g.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		level.Error(logger).Log("msg", "Failed to run", "err", err)
 		os.Exit(1)
 	}
 }

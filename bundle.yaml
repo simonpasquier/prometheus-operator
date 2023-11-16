@@ -3,9 +3,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -240,6 +239,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
@@ -352,6 +352,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -630,6 +631,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           authSecret:
                             description: The secret's key that contains the CRAM-MD5
                               secret. The secret needs to be in the same namespace
@@ -652,6 +654,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           authUsername:
                             description: The username to use for authentication.
                             type: string
@@ -949,6 +952,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -1212,6 +1216,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                         required:
                         - webhookUrl
                         type: object
@@ -1253,6 +1258,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiURL:
                             description: The URL to send OpsGenie API requests to.
                             type: string
@@ -1393,6 +1399,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -1841,6 +1848,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -2136,6 +2144,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           sendResolved:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
@@ -2163,6 +2172,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           severity:
                             description: Severity of the incident.
                             type: string
@@ -2299,6 +2309,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -2580,6 +2591,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           tokenFile:
                             description: The token file that contains the registered
                               application's API token, see https://pushover.net/apps.
@@ -2616,6 +2628,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           userKeyFile:
                             description: The user key file that contains the recipient
                               user's user key. Either `userKey` or `userKeyFile` is
@@ -2698,6 +2711,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           callbackId:
                             type: string
                           channel:
@@ -2847,6 +2861,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -3241,6 +3256,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -3600,6 +3616,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           botTokenFile:
                             description: "File to read the Telegram bot token from.
                               It is mutually exclusive with `botToken`. Either `botToken`
@@ -3725,6 +3742,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4003,6 +4021,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiUrl:
                             description: The VictorOps API URL.
                             type: string
@@ -4138,6 +4157,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4518,6 +4538,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4886,6 +4907,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -5159,6 +5181,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                         type: object
                       type: array
                     wechatConfigs:
@@ -5191,6 +5214,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiURL:
                             description: The WeChat API URL.
                             type: string
@@ -5309,6 +5333,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -5672,9 +5697,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -13091,9 +13115,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -13783,9 +13806,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -14517,9 +14539,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -18599,6 +18620,28 @@ spec:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: The field controls if and how PVCs are deleted during
+                  the lifecycle of a StatefulSet. The default behavior is all PVCs
+                  are retained. This is an alpha field from kubernetes 1.23 until
+                  1.26 and a beta field from 1.26. It requires enabling the StatefulSetAutoDeletePVC
+                  feature gate.
+                properties:
+                  whenDeleted:
+                    description: WhenDeleted specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      deleted. The default policy of `Retain` causes PVCs to not be
+                      affected by StatefulSet deletion. The `Delete` policy causes
+                      those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: WhenScaled specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      scaled down. The default policy of `Retain` causes PVCs to not
+                      be affected by a scaledown. The `Delete` policy causes the associated
+                      PVCs for any excess pods above the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
                 description: "PodMetadata configures labels and annotations which
                   are propagated to the Prometheus pods. \n The following items are
@@ -22959,9 +23002,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -27472,6 +27514,28 @@ spec:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: The field controls if and how PVCs are deleted during
+                  the lifecycle of a StatefulSet. The default behavior is all PVCs
+                  are retained. This is an alpha field from kubernetes 1.23 until
+                  1.26 and a beta field from 1.26. It requires enabling the StatefulSetAutoDeletePVC
+                  feature gate.
+                properties:
+                  whenDeleted:
+                    description: WhenDeleted specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      deleted. The default policy of `Retain` causes PVCs to not be
+                      affected by StatefulSet deletion. The `Delete` policy causes
+                      those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: WhenScaled specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      scaled down. The default policy of `Retain` causes PVCs to not
+                      be affected by a scaledown. The `Delete` policy causes the associated
+                      PVCs for any excess pods above the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
                 description: "PodMetadata configures labels and annotations which
                   are propagated to the Prometheus pods. \n The following items are
@@ -32800,9 +32864,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -32932,9 +32995,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -33265,6 +33327,7 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       description: Specifies headers to send to proxies during CONNECT
                         requests.
                       type: object
@@ -33451,6 +33514,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                   required:
                   - server
                   type: object
@@ -33521,6 +33585,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                     filters:
                       description: 'Filters can be used optionally to filter the instance
                         list by other criteria. Available filter criteria can be found
@@ -33575,6 +33640,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                   type: object
                 type: array
               fileSDConfigs:
@@ -33848,6 +33914,16 @@ spec:
                       enum:
                       - Node
                       - node
+                      - Service
+                      - service
+                      - Pod
+                      - pod
+                      - Endpoints
+                      - endpoints
+                      - EndpointSlice
+                      - endpointslice
+                      - Ingress
+                      - ingress
                       type: string
                     selectors:
                       description: Selector to select objects.
@@ -33859,11 +33935,20 @@ spec:
                           label:
                             type: string
                           role:
-                            description: K8SRole is role of the service in Kubernetes.
-                              Currently the only supported role is "Node".
+                            description: Role is role of the service in Kubernetes.
                             enum:
                             - Node
                             - node
+                            - Service
+                            - service
+                            - Pod
+                            - pod
+                            - Endpoints
+                            - endpoints
+                            - EndpointSlice
+                            - endpointslice
+                            - Ingress
+                            - ingress
                             type: string
                         required:
                         - role
@@ -34226,9 +34311,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -34948,9 +35032,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
+    controller-gen.kubebuilder.io/version: v0.13.0
     operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -41999,6 +42082,9 @@ spec:
       - args:
         - --kubelet-service=kube-system/kubelet
         - --prometheus-config-reloader=quay.io/prometheus-operator/prometheus-config-reloader:v0.69.1
+        env:
+        - name: GOGC
+          value: "30"
         image: quay.io/prometheus-operator/prometheus-operator:v0.69.1
         name: prometheus-operator
         ports:
