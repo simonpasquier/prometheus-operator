@@ -101,12 +101,12 @@ var (
 	apiServer       string
 	tlsClientConfig rest.TLSClientConfig
 
-	serverConfig server.Config
+	serverConfig = server.DefaultConfig(":8080", false)
 )
 
 func parseFlags(fs *flag.FlagSet) {
 	// Web server settings.
-	server.RegisterFlags(fs, &serverConfig, ":8080", false)
+	server.RegisterFlags(fs, &serverConfig)
 
 	// Kubernetes client-go settings.
 	fs.StringVar(&impersonateUser, "as", "", "Username to impersonate. User could be a regular user or a service account in a namespace.")

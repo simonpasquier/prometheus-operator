@@ -39,12 +39,12 @@ import (
 
 func main() {
 	var (
-		serverConfig server.Config
-		flagset      = flag.CommandLine
+		serverConfig server.Config = server.DefaultConfig(":8443", true)
+		flagset                    = flag.CommandLine
 		logConfig    logging.Config
 	)
 
-	server.RegisterFlags(flagset, &serverConfig, ":8443", true)
+	server.RegisterFlags(flagset, &serverConfig)
 	versionutil.RegisterFlags(flagset)
 	logging.RegisterFlags(flagset, &logConfig)
 

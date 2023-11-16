@@ -36,32 +36,49 @@ import (
 )
 
 const (
-	defaultTLSDir = "/etc/tls/private"
+	defaultTLSDir     = "/etc/tls/private"
+	defaultTLSVersion = "VersionTLS13"
 )
 
-func RegisterFlags(fs *flag.FlagSet, c *Config, defaultListenAddress string, defaultEnableTLS bool) {
-	fs.StringVar(&c.ListenAddress, "web.listen-address", defaultListenAddress, "Address on which to expose metrics and web interface.")
+func DefaultConfig(listenAddress string, enableTLS bool) Config {
+	return Config{
+		ListenAddress: listenAddress,
+		// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
+		// standard library and golang.org/x/net are fully fixed.
+		// Right now, it is possible for authenticated and unauthenticated users to
+		// hold open HTTP2 connections and consume huge amounts of memory.
+		// See:
+		// * https://github.com/kubernetes/kubernetes/pull/121120
+		// * https://github.com/kubernetes/kubernetes/issues/121197
+		// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
+		EnableHTTP2: false,
+		TLSConfig: TLSConfig{
+			Enabled:        enableTLS,
+			CertFile:       filepath.Join(defaultTLSDir, "tls.crt"),
+			KeyFile:        filepath.Join(defaultTLSDir, "tls.key"),
+			ClientCAFile:   filepath.Join(defaultTLSDir, "tls-ca.crt"),
+			MinVersion:     defaultTLSVersion,
+			CipherSuites:   operator.StringSet{},
+			ReloadInterval: time.Minute,
+		},
+	}
+}
 
-	// Mitigate CVE-2023-44487 by disabling HTTP2 by default until the Go
-	// standard library and golang.org/x/net are fully fixed.
-	// Right now, it is possible for authenticated and unauthenticated users to
-	// hold open HTTP2 connections and consume huge amounts of memory.
-	// See:
-	// * https://github.com/kubernetes/kubernetes/pull/121120
-	// * https://github.com/kubernetes/kubernetes/issues/121197
-	// * https://github.com/golang/go/issues/63417#issuecomment-1758858612
-	fs.BoolVar(&c.EnableHTTP2, "web.enable-http2", false, "Enable HTTP2 connections.")
+func RegisterFlags(fs *flag.FlagSet, c *Config) {
+	fs.StringVar(&c.ListenAddress, "web.listen-address", c.ListenAddress, "Address on which to expose metrics and web interface.")
 
-	fs.BoolVar(&c.TLSConfig.Enabled, "web.enable-tls", defaultEnableTLS, "Enable TLS for the web server.")
-	fs.StringVar(&c.TLSConfig.CertFile, "web.cert-file", filepath.Join(defaultTLSDir, "tls.crt"), "Certficate file to be used for the web server.")
-	fs.StringVar(&c.TLSConfig.KeyFile, "web.key-file", filepath.Join(defaultTLSDir, "tls.key"), "Private key matching the cert file to be used for the web server.")
-	fs.StringVar(&c.TLSConfig.ClientCAFile, "web.client-ca-file", filepath.Join(defaultTLSDir, "tls-ca.crt"), "Client CA certificate file to be used for the web server.")
+	fs.BoolVar(&c.EnableHTTP2, "web.enable-http2", c.EnableHTTP2, "Enable HTTP2 connections.")
 
-	fs.DurationVar(&c.TLSConfig.ReloadInterval, "web.tls-reload-interval", time.Minute, "The interval at which to watch for TLS certificate changes, by default set to 1 minute. (default 1m0s).")
+	fs.BoolVar(&c.TLSConfig.Enabled, "web.enable-tls", c.TLSConfig.Enabled, "Enable TLS for the web server.")
+	fs.StringVar(&c.TLSConfig.CertFile, "web.cert-file", c.TLSConfig.CertFile, "Certficate file to be used for the web server.")
+	fs.StringVar(&c.TLSConfig.KeyFile, "web.key-file", c.TLSConfig.KeyFile, "Private key matching the cert file to be used for the web server.")
+	fs.StringVar(&c.TLSConfig.ClientCAFile, "web.client-ca-file", c.TLSConfig.ClientCAFile, "Client CA certificate file to be used for the web server.")
 
-	fs.StringVar(&c.TLSConfig.MinVersion, "web.tls-min-version", "VersionTLS13",
+	fs.DurationVar(&c.TLSConfig.ReloadInterval, "web.tls-reload-interval", c.TLSConfig.ReloadInterval, "The interval at which to watch for TLS certificate changes, by default set to 1 minute. (default 1m0s).")
+
+	fs.StringVar(&c.TLSConfig.MinVersion, "web.tls-min-version", c.TLSConfig.MinVersion,
 		"Minimum TLS version supported. Value must match version names from https://golang.org/pkg/crypto/tls/#pkg-constants.")
-	fs.Var(c.TLSConfig.CipherSuites, "web.tls-cipher-suites", "Comma-separated list of cipher suites for the server."+
+	fs.Var(&c.TLSConfig.CipherSuites, "web.tls-cipher-suites", "Comma-separated list of cipher suites for the server."+
 		" Values are from tls package constants (https://golang.org/pkg/crypto/tls/#pkg-constants)."+
 		"If omitted, the default Go cipher suites will be used. "+
 		"Note that TLS 1.3 ciphersuites are not configurable.")
