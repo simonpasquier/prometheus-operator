@@ -26,22 +26,29 @@ import (
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/utils/ptr"
 )
 
-// Syncer knows how to synchronize statefulset-based resources.
+// Syncer knows how to synchronize statefulset-based or daemonset-based resources.
 type Syncer interface {
 	// Sync the state of the object identified by its key.
 	Sync(context.Context, string) error
 	// UpdateStatus updates the status of the object identified by its key.
 	UpdateStatus(context.Context, string) error
-	// Resolve returns the resource associated to the statefulset.
-	Resolve(*appsv1.StatefulSet) metav1.Object
+}
+
+// ResourceGetter returns an object from its "<namespace>/<name>" key.
+type ResourceGetter interface {
+	Get(string) (runtime.Object, error)
 }
 
 // ReconcilerMetrics tracks reconciler metrics.
@@ -69,6 +76,7 @@ type ResourceReconciler struct {
 	resourceKind string
 
 	syncer Syncer
+	getter ResourceGetter
 
 	reconcileTotal    prometheus.Counter
 	reconcileErrors   prometheus.Counter
@@ -79,9 +87,9 @@ type ResourceReconciler struct {
 	metrics ReconcilerMetrics
 
 	// Queue to trigger state reconciliations of  objects.
-	reconcileQ workqueue.RateLimitingInterface
+	reconcileQ workqueue.TypedRateLimitingInterface[string]
 	// Queue to trigger status updates of Prometheus objects.
-	statusQ workqueue.RateLimitingInterface
+	statusQ workqueue.TypedRateLimitingInterface[string]
 
 	g errgroup.Group
 
@@ -100,6 +108,7 @@ const (
 func NewResourceReconciler(
 	l *slog.Logger,
 	syncer Syncer,
+	getter ResourceGetter,
 	metrics ReconcilerMetrics,
 	kind string,
 	reg prometheus.Registerer,
@@ -135,6 +144,7 @@ func NewResourceReconciler(
 
 	qname := strings.ToLower(kind)
 
+	// TODO: Support reconciling metrics for DaemonSet resource
 	for _, t := range []string{"StatefulSet", kind} {
 		for _, e := range []HandlerEvent{AddEvent, DeleteEvent, UpdateEvent} {
 			metrics.TriggerByCounter(t, e)
@@ -145,6 +155,7 @@ func NewResourceReconciler(
 		logger:       l,
 		resourceKind: kind,
 		syncer:       syncer,
+		getter:       getter,
 
 		reconcileTotal:    reconcileTotal,
 		reconcileErrors:   reconcileErrors,
@@ -154,8 +165,8 @@ func NewResourceReconciler(
 		metrics:           metrics,
 		controllerID:      controllerID,
 
-		reconcileQ: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname),
-		statusQ:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), qname+"_status"),
+		reconcileQ: workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname}),
+		statusQ:    workqueue.NewTypedRateLimitingQueueWithConfig[string](workqueue.DefaultTypedControllerRateLimiter[string](), workqueue.TypedRateLimitingQueueConfig[string]{Name: qname + "_status"}),
 	}
 }
 
@@ -231,11 +242,43 @@ func (rr *ResourceReconciler) objectKey(obj interface{}) (string, bool) {
 	return k, true
 }
 
+func (rr *ResourceReconciler) resolve(obj metav1.Object) metav1.Object {
+	for _, or := range obj.GetOwnerReferences() {
+		if !ptr.Deref(or.Controller, false) {
+			continue
+		}
+
+		owner, err := rr.getter.Get(types.NamespacedName{Namespace: obj.GetNamespace(), Name: or.Name}.String())
+		if err != nil {
+			if !apierrors.IsNotFound(err) {
+				rr.logger.Error("can't resolve owner", "err", err)
+			}
+
+			return nil
+		}
+
+		owner = owner.DeepCopyObject()
+		o, err := meta.Accessor(owner)
+		if err != nil {
+			rr.logger.Error("can't get owner meta", "gvk", owner.GetObjectKind().GroupVersionKind().String(), "err", err)
+		}
+
+		return o
+	}
+
+	rr.logger.Error("can't find controller owner")
+	return nil
+}
+
 // OnAdd implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
-	if _, ok := obj.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetAdd(obj.(*appsv1.StatefulSet))
+	switch v := obj.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetAdd(v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetAdd(v)
 		return
 	}
 
@@ -261,8 +304,12 @@ func (rr *ResourceReconciler) OnAdd(obj interface{}, _ bool) {
 
 // OnUpdate implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
-	if _, ok := cur.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), cur.(*appsv1.StatefulSet))
+	switch v := cur.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetUpdate(old.(*appsv1.DaemonSet), v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetUpdate(old.(*appsv1.StatefulSet), v)
 		return
 	}
 
@@ -301,8 +348,12 @@ func (rr *ResourceReconciler) OnUpdate(old, cur interface{}) {
 
 // OnDelete implements the cache.ResourceEventHandler interface.
 func (rr *ResourceReconciler) OnDelete(obj interface{}) {
-	if _, ok := obj.(*appsv1.StatefulSet); ok {
-		rr.onStatefulSetDelete(obj.(*appsv1.StatefulSet))
+	switch v := obj.(type) {
+	case *appsv1.DaemonSet:
+		rr.onDaemonSetDelete(v)
+		return
+	case *appsv1.StatefulSet:
+		rr.onStatefulSetDelete(v)
 		return
 	}
 
@@ -327,13 +378,24 @@ func (rr *ResourceReconciler) OnDelete(obj interface{}) {
 }
 
 func (rr *ResourceReconciler) onStatefulSetAdd(ss *appsv1.StatefulSet) {
-	obj := rr.syncer.Resolve(ss)
+	obj := rr.resolve(ss)
 	if obj == nil {
 		return
 	}
 
 	rr.logger.Debug("StatefulSet added")
 	rr.metrics.TriggerByCounter("StatefulSet", AddEvent).Inc()
+
+	rr.EnqueueForReconciliation(obj)
+}
+
+func (rr *ResourceReconciler) onDaemonSetAdd(ds *appsv1.DaemonSet) {
+	obj := rr.resolve(ds)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet added")
 
 	rr.EnqueueForReconciliation(obj)
 }
@@ -349,7 +411,7 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 		return
 	}
 
-	obj := rr.syncer.Resolve(cur)
+	obj := rr.resolve(cur)
 	if obj == nil {
 		return
 	}
@@ -368,14 +430,54 @@ func (rr *ResourceReconciler) onStatefulSetUpdate(old, cur *appsv1.StatefulSet) 
 	rr.EnqueueForReconciliation(obj)
 }
 
+func (rr *ResourceReconciler) onDaemonSetUpdate(old, cur *appsv1.DaemonSet) {
+	rr.logger.Debug("update handler", "resource", "daemonset", "old", old.ResourceVersion, "cur", cur.ResourceVersion)
+
+	if rr.DeletionInProgress(cur) {
+		return
+	}
+
+	if !rr.hasObjectChanged(old, cur) {
+		return
+	}
+
+	obj := rr.resolve(cur)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet updated")
+	if !rr.hasStateChanged(old, cur) {
+		// If the daemonset state (spec, labels or annotations) hasn't
+		// changed, the operator can only update the status subresource instead
+		// of doing a full reconciliation.
+		// TODO: Uncomment this when Prometheus Agent DaemonSet's status has been supported.
+		// rr.EnqueueForStatus(obj)
+		return
+	}
+
+	rr.EnqueueForReconciliation(obj)
+}
+
 func (rr *ResourceReconciler) onStatefulSetDelete(ss *appsv1.StatefulSet) {
-	obj := rr.syncer.Resolve(ss)
+	obj := rr.resolve(ss)
 	if obj == nil {
 		return
 	}
 
 	rr.logger.Debug("StatefulSet delete")
 	rr.metrics.TriggerByCounter("StatefulSet", DeleteEvent).Inc()
+
+	rr.EnqueueForReconciliation(obj)
+}
+
+func (rr *ResourceReconciler) onDaemonSetDelete(ds *appsv1.DaemonSet) {
+	obj := rr.resolve(ds)
+	if obj == nil {
+		return
+	}
+
+	rr.logger.Debug("DaemonSet delete")
 
 	rr.EnqueueForReconciliation(obj)
 }
@@ -429,12 +531,11 @@ func (rr *ResourceReconciler) Stop() {
 // the same key.
 // Before returning, the object's key is automatically added to the status queue.
 func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool {
-	item, quit := rr.reconcileQ.Get()
+	key, quit := rr.reconcileQ.Get()
 	if quit {
 		return false
 	}
 
-	key := item.(string)
 	defer rr.reconcileQ.Done(key)
 	defer rr.statusQ.Add(key) // enqueues the object's key to update the status subresource
 
@@ -456,12 +557,11 @@ func (rr *ResourceReconciler) processNextReconcileItem(ctx context.Context) bool
 }
 
 func (rr *ResourceReconciler) processNextStatusItem(ctx context.Context) bool {
-	item, quit := rr.statusQ.Get()
+	key, quit := rr.statusQ.Get()
 	if quit {
 		return false
 	}
 
-	key := item.(string)
 	defer rr.statusQ.Done(key)
 
 	rr.statusTotal.Inc()
