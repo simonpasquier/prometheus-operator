@@ -339,13 +339,13 @@ github.com/pmezard/go-difflib/difflib
 ## explicit; go 1.22
 github.com/prometheus-community/prom-label-proxy/injectproxy
 # github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.77.0 => ./pkg/apis/monitoring
-## explicit; go 1.23
+## explicit; go 1.22.5
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1alpha1
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1beta1
 # github.com/prometheus-operator/prometheus-operator/pkg/client v0.77.0 => ./pkg/client
-## explicit; go 1.23
+## explicit; go 1.22.5
 github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration
 github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/internal
 github.com/prometheus-operator/prometheus-operator/pkg/client/applyconfiguration/monitoring/v1
