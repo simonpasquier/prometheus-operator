@@ -1,8 +1,6 @@
 module github.com/prometheus-operator/prometheus-operator/pkg/client
 
-go 1.23
-
-toolchain go1.23.1
+go 1.22.5
 
 require (
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.77.0
