@@ -19,10 +19,9 @@ jobs:
       with:
         go-version: '${{ env.golang-version }}'
         check-latest: true
-    - name: Build images
+    - name: Check free space
       run: |
-        export SHELL=/bin/bash
-        make build image
+        df -h
     - name: Start KinD
       uses: helm/kind-action@v1.10.0
       with:
@@ -36,10 +35,15 @@ jobs:
         kubectl wait --for=condition=Ready pods --all --all-namespaces --timeout=300s
         kubectl cluster-info
         kubectl get pods -A
-    - name: Load images
+    - name: Build and load images
       run: |
         make test-e2e-images
         kubectl apply -f scripts/kind-rbac.yaml
+    - name: Clean free space
+      run: |
+        df -h
+        docker image prune
+        df -h
     - name: Run tests
       env:
         E2E_DIAGNOSTIC_DIRECTORY: ${{ env.E2E_DIAGNOSTIC_DIRECTORY }}
