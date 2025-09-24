@@ -29,6 +29,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -1057,7 +1058,6 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	var (
 		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
-		getErr               error
 	)
 
 	// Update the status of selected serviceMonitors.
@@ -1076,65 +1076,83 @@ func (c *Operator) updateConfigResourcesStatus(ctx context.Context, p *monitorin
 
 	// Remove bindings from serviceMonitors which reference the
 	// workload but aren't selected anymore.
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		k, ok := c.accessor.MetaNamespaceKey(obj)
-		if !ok {
-			return
-		}
-
-		if _, ok = resources.sMons[k]; ok {
-			return
-		}
-
-		s, ok := obj.(*monitoringv1.ServiceMonitor)
-		if !ok {
-			return
-		}
-
-		if err := configResourceSyncer.RemoveBinding(ctx, s); err != nil {
-			getErr = fmt.Errorf("failed to remove Prometheus binding from ServiceMonitor %s status: %w", k, err)
-		}
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
-	}
-	if getErr != nil {
-		return getErr
+	if err := cleanupBindings(
+		ctx,
+		c.smonInfs.ListAll,
+		resources.sMons,
+		c.accessor,
+		configResourceSyncer,
+	); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
 
 	// Remove bindings from podMonitors which reference the
 	// workload but aren't selected anymore.
-	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		k, ok := c.accessor.MetaNamespaceKey(obj)
-		if !ok {
-			return
-		}
-
-		if _, ok = resources.pMons[k]; ok {
-			return
-		}
-
-		pm, ok := obj.(*monitoringv1.PodMonitor)
-		if !ok {
-			return
-		}
-
-		if err := configResourceSyncer.RemoveBinding(ctx, pm); err != nil {
-			getErr = fmt.Errorf("failed to remove Prometheus binding from PodMonitor %s status: %w", k, err)
-		}
-	}); err != nil {
-		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	if err := cleanupBindings(
+		ctx,
+		c.pmonInfs.ListAll,
+		resources.pMons,
+		c.accessor,
+		configResourceSyncer,
+	); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
-	return getErr
+
+	return nil
+}
+
+func cleanupBindings[T prompkg.ConfigurationResource](
+	ctx context.Context,
+	listerFunc func(labels.Selector, cache.AppendFunc) error,
+	resourceSelection prompkg.TypedResourcesSelection[T],
+	accessor *operator.Accessor,
+	configResourceSyncer *prompkg.ConfigResourceSyncer,
+) error {
+	var err error
+	listErr := listerFunc(labels.Everything(), func(o any) {
+		if err != nil {
+			// Stop processing on the first error.
+			return
+		}
+
+		k, ok := accessor.MetaNamespaceKey(o)
+		if !ok {
+			return
+		}
+
+		if _, found := resourceSelection[k]; found {
+			return
+		}
+
+		obj, ok := o.(runtime.Object)
+		if !ok {
+			return
+		}
+		if err = k8sutil.AddTypeInformationToObject(obj); err != nil {
+			err = fmt.Errorf("failed to add type information: %w", err)
+			return
+		}
+
+		var (
+			configResource prompkg.ConfigurationObject
+			gvk            = obj.GetObjectKind().GroupVersionKind()
+		)
+		switch gvk.Kind {
+		case monitoringv1.ServiceMonitorsKind:
+			configResource = o.(*monitoringv1.ServiceMonitor)
+		case monitoringv1.PodMonitorsKind:
+			configResource = o.(*monitoringv1.PodMonitor)
+		}
+
+		if err = configResourceSyncer.RemoveBinding(ctx, configResource); err != nil {
+			err = fmt.Errorf("failed to remove workload binding from %s %s status: %w", gvk.Kind, k, err)
+		}
+	})
+	if listErr != nil {
+		return fmt.Errorf("listing all items from cache failed: %w", listErr)
+	}
+
+	return err
 }
 
 // configResStatusCleanup removes prometheus bindings from the configuration resources (ServiceMonitor, PodMonitor, ScrapeConfig and PodMonitor).
@@ -1143,48 +1161,29 @@ func (c *Operator) configResStatusCleanup(ctx context.Context, p *monitoringv1.P
 		return nil
 	}
 
-	var (
-		configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
-		getErr               error
-	)
+	var configResourceSyncer = prompkg.NewConfigResourceSyncer(p, c.dclient)
 
-	// Remove bindings from all serviceMonitors which reference the workload.
-	if err := c.smonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		s, ok := obj.(*monitoringv1.ServiceMonitor)
-		if !ok {
-			return
-		}
-
-		getErr = configResourceSyncer.RemoveBinding(ctx, s)
-	}); err != nil {
-		return fmt.Errorf("listing all ServiceMonitors from cache failed: %w", err)
-	}
-	if getErr != nil {
-		return getErr
+	if err := cleanupBindings(
+		ctx,
+		c.smonInfs.ListAll,
+		prompkg.TypedResourcesSelection[*monitoringv1.ServiceMonitor]{},
+		c.accessor,
+		configResourceSyncer,
+	); err != nil {
+		return fmt.Errorf("failed to remove bindings for service monitors: %w", err)
 	}
 
-	// Remove bindings from all podMonitors which reference the workload.
-	if err := c.pmonInfs.ListAll(labels.Everything(), func(obj any) {
-		if getErr != nil {
-			// Skip all subsequent updates after the first error.
-			return
-		}
-
-		pm, ok := obj.(*monitoringv1.PodMonitor)
-		if !ok {
-			return
-		}
-
-		getErr = configResourceSyncer.RemoveBinding(ctx, pm)
-	}); err != nil {
-		return fmt.Errorf("listing all PodMonitors from cache failed: %w", err)
+	if err := cleanupBindings(
+		ctx,
+		c.pmonInfs.ListAll,
+		prompkg.TypedResourcesSelection[*monitoringv1.PodMonitor]{},
+		c.accessor,
+		configResourceSyncer,
+	); err != nil {
+		return fmt.Errorf("failed to remove bindings for pod monitors: %w", err)
 	}
-	return getErr
+
+	return nil
 }
 
 // As the ShardRetentionPolicy feature evolves, should retain will evolve accordingly.
