@@ -17,6 +17,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"strings"
@@ -305,15 +306,33 @@ func AddTypeInformationToObject(obj runtime.Object) error {
 	return nil
 }
 
+// dropOperatorMetadataKeys removes all keys which start with the reserved
+// operator prefix (e.g. "operator.prometheus.io/").
+func dropOperatorMetadataKeys(m map[string]string) map[string]string {
+	return maps.Collect(func(yield func(string, string) bool) {
+		for k, v := range m {
+			if strings.HasPrefix(k, "operator.prometheus.io/") {
+				continue
+			}
+
+			if !yield(k, v) {
+				return
+			}
+		}
+	})
+}
+
 // mergeMetadata takes labels and annotations from the old resource and merges
 // them into the new resource. If a key is present in both resources, the new
-// resource wins. It also copies the ResourceVersion from the old resource to
-// the new resource to prevent update conflicts.
+// resource wins. All keys starting with the "operator.prometheus.io/" prefix
+// in the old resource are dropped before merging.
+// It also copies the ResourceVersion from the old resource to the new resource
+// to prevent update conflicts.
 func mergeMetadata(newObj *metav1.ObjectMeta, oldObj metav1.ObjectMeta) {
 	newObj.ResourceVersion = oldObj.ResourceVersion
 
-	newObj.SetLabels(mergeMaps(newObj.Labels, oldObj.Labels))
-	newObj.SetAnnotations(mergeMaps(newObj.Annotations, oldObj.Annotations))
+	newObj.SetLabels(mergeMaps(newObj.Labels, dropOperatorMetadataKeys(oldObj.Labels)))
+	newObj.SetAnnotations(mergeMaps(newObj.Annotations, dropOperatorMetadataKeys(oldObj.Annotations)))
 }
 
 func mergeMaps(newObj map[string]string, oldObj map[string]string) map[string]string {
@@ -331,6 +350,12 @@ func mergeMapsByPrefix(from map[string]string, to map[string]string, prefix stri
 
 	if from == nil {
 		from = make(map[string]string)
+	}
+
+	for k := range to {
+		if strings.HasPrefix(k, "operator.prometheus.io/") {
+			delete(to, k)
+		}
 	}
 
 	for k, v := range from {
