@@ -263,7 +263,7 @@ func TestCreateThanosConfigSecret(t *testing.T) {
 	}
 }
 
-func TestprocessShardRetention(t *testing.T) {
+func TestProcessShardRetention(t *testing.T) {
 	for _, tc := range []struct {
 		name                     string
 		retentionPoliciesEnabled bool
