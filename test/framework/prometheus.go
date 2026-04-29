@@ -827,7 +827,7 @@ func (f *Framework) CheckPrometheusFiringAlert(ctx context.Context, ns, svcName,
 	}
 
 	if len(alerts) != 1 {
-		return fmt.Errorf("expected 1 query result but got %v", len(alerts))
+		return fmt.Errorf("expected 1 query result but got %v: %v", len(alerts), alerts)
 	}
 
 	return nil
